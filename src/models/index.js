@@ -1,0 +1,14 @@
+module.exports.Token = require('./token.model');
+module.exports.User = require('./user.model');
+module.exports.RoleModel = require('./role.model');
+module.exports.SectionsModel = require('./sections.model');
+module.exports.UserProfile = require('./user-profile.model');
+module.exports.GeneralSettingModel = require('./general-setting.model');
+module.exports.ContactSupportModel = require('./contact-support.model');
+module.exports.SupportModel = require('./support.model');
+module.exports.CategoryModel = require('./category.model ');
+module.exports.NotificationModel = require('./notification.model');
+module.exports.FaqModel = require('./faq.model');
+module.exports.UserAccounts = require('./useraccount.model')
+module.exports.Institution = require('./institution.model')
+module.exports.Notification = require('./notification_table.model');

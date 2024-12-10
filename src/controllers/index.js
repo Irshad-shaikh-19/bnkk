@@ -1,0 +1,17 @@
+module.exports.authController = require('./auth.controller');
+module.exports.userController = require('./user.controller');
+module.exports.userProfileController = require('./user-profile.controller');
+module.exports.roleController = require('./role.controller');
+module.exports.sectionsController = require('./sections.controller');
+module.exports.transactionController = require('./transaction.controller');
+module.exports.generalSettingController = require('./general-setting.controller');
+module.exports.systemLogController = require('./system-log.controller');
+module.exports.contactSupportController = require('./contact-support.controller');
+module.exports.supportController = require('./support.controller');
+module.exports.dashboardController = require('./dashboard.controller');
+module.exports.notificationController = require('./notification.controller');
+module.exports.faqController = require('./faq.controller');
+module.exports.userAccountController = require('./useraccount.controller')
+module.exports.institutionsController = require('./institution.controller');
+module.exports.couponController = require('./coupons.controller');
+module.exports.notificationTableController = require('./notification_table.controller');
