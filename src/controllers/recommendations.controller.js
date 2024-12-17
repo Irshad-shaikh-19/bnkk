@@ -6,13 +6,19 @@ const pick = require('../utils/pick');
 
 // Get all recommendations with filters, pagination, and sorting
 const getAllRecommendations = catchAsync(async (req, res) => {
-  const filter = pick(req.query, ['search', 'category', 'rewardType', 'isActive', 'expiresAt']);
+  // Extract query parameters
+  const filter = pick(req.query, ['search', 'category', 'isActive']);
   const options = pick(req.query, ['sortBy', 'limit', 'page']);
 
-  const { status, message, data } = await recommendationsService.getRecommendations(filter, options);
-  const pagination = data?.pagination || {};
-  res.status(status).send({ status, message, data: data.recommendations, pagination });
+  console.log('Filter:', filter);
+  console.log('Options:', options);
+
+  // Fetch recommendations using service
+  const { status, message, data, pagination } = await recommendationsService.getRecommendations(filter, options);
+
+  res.status(status).send({ status, message, data, pagination });
 });
+
 
 // Get recommendation details by ID
 const getRecommendationById = catchAsync(async (req, res) => {

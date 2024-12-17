@@ -183,36 +183,39 @@ const updateRecommendationDetails = async (id, userId, bodyData, info) => {
   }
 };
 
-// Get all active recommendations with pagination and search
 const getRecommendations = async (filter = {}, options = {}) => {
   try {
     const { search = '', category = '', isActive = true } = filter;
     const { page = 1, limit = 10, sortBy = 'createdAt:desc' } = options;
 
-    // Search criteria
-    let searchData = [{ isActive }];
-
+    // Build search criteria
+    const searchData = [{ isActive }]; // Default filter for active recommendations
     if (search) {
       const searchValue = { $regex: `.*${search}.*`, $options: 'i' };
       searchData.push({
         $or: [{ title: searchValue }, { description: searchValue }],
       });
     }
-
     if (category) {
       searchData.push({ category });
     }
 
+    // Pagination and sorting
     const skip = (page - 1) * limit;
     const sort = {};
     const [sortKey, sortOrder] = sortBy.split(':');
     sort[sortKey] = sortOrder === 'desc' ? -1 : 1;
 
+    // Log the constructed query
+    console.log('Search Criteria:', JSON.stringify(searchData, null, 2));
+    console.log('Pagination:', { skip, limit });
+    console.log('Sorting:', sort);
+
+    // Count and fetch data
     const countPromise = RecommendationsModel.aggregate([
       { $match: { $and: searchData } },
       { $count: 'count' },
     ]);
-
     const docsPromise = RecommendationsModel.aggregate([
       { $match: { $and: searchData } },
       { $sort: sort },
@@ -230,6 +233,7 @@ const getRecommendations = async (filter = {}, options = {}) => {
       },
     ]);
 
+    // Wait for both promises to resolve
     const [totalCount, results] = await Promise.all([countPromise, docsPromise]);
 
     const totalResults = totalCount[0]?.count || 0;
@@ -242,18 +246,15 @@ const getRecommendations = async (filter = {}, options = {}) => {
     };
 
     return {
-      pagination,
+      status: 200,
       message: 'Recommendations retrieved successfully.',
       data: results,
-      status: httpStatus.OK,
+      pagination,
     };
   } catch (error) {
-    errorHandler.errorM({
-      action_type: 'get-recommendations',
-      error_data: error,
-    });
+    console.error('Error in getRecommendations:', error);
     return {
-      status: httpStatus.INTERNAL_SERVER_ERROR,
+      status: 500,
       message: 'Something went wrong.',
       data: {},
     };
