@@ -6,17 +6,30 @@ const pick = require('../utils/pick');
 
 // Get all recommendations with filters, pagination, and sorting
 const getAllRecommendations = catchAsync(async (req, res) => {
-  // Extract query parameters
-  const filter = pick(req.query, ['search', 'category', 'isActive']);
-  const options = pick(req.query, ['sortBy', 'limit', 'page']);
+  // Extract query parameters from the request
+  const filter = pick(req.query, ['search', 'category', 'isActive']);  // Picking filters for search, category, and isActive
+  const options = pick(req.query, ['sortBy', 'limit', 'page']);  // Picking pagination and sorting options
 
-  console.log('Filter:', filter);
-  console.log('Options:', options);
+  console.log('Filter:', filter);  // Logs the applied filters
+  console.log('Options:', options);  // Logs the pagination and sorting options
 
-  // Fetch recommendations using service
-  const { status, message, data, pagination } = await recommendationsService.getRecommendations(filter, options);
+  // Default pagination and sorting options
+  const defaultOptions = {
+    limit: options.limit ? parseInt(options.limit) : 10,  // If limit exists, use it, otherwise default to 10
+    page: options.page ? parseInt(options.page) : 1,  // If page exists, use it, otherwise default to 1
+    sortBy: options.sortBy || 'createdAt:desc',  // If sortBy exists, use it, otherwise default to createdAt:desc
+  };
 
-  res.status(status).send({ status, message, data, pagination });
+  // Fetch recommendations using the service function
+  const { status, message, data, pagination } = await recommendationsService.getRecommendations(filter, defaultOptions);
+
+  // Send the response to the client
+  res.status(status).send({
+    status,  // The status code of the response
+    message,  // A message (could be success/error)
+    data,  // The data of the recommendations
+    pagination,  // Pagination info (total count, page, etc.)
+  });
 });
 
 

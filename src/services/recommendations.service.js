@@ -189,8 +189,8 @@ const getRecommendations = async (filter = {}, options = {}) => {
     const { page = 1, limit = 10, sortBy = 'createdAt:desc' } = options;
 
     // Build search criteria
-    const searchData = [{ isActive }]; // Default filter for active recommendations
-    if (search) {
+    const searchData = [{ isActive }];
+    if (search.trim()) {
       const searchValue = { $regex: `.*${search}.*`, $options: 'i' };
       searchData.push({
         $or: [{ title: searchValue }, { description: searchValue }],
@@ -202,14 +202,21 @@ const getRecommendations = async (filter = {}, options = {}) => {
 
     // Pagination and sorting
     const skip = (page - 1) * limit;
-    const sort = {};
-    const [sortKey, sortOrder] = sortBy.split(':');
-    sort[sortKey] = sortOrder === 'desc' ? -1 : 1;
+    let [sortKey, sortOrder] = sortBy.split(':');
+    if (!['createdAt', 'rewardAmount', 'rewardType'].includes(sortKey)) {
+      sortKey = 'createdAt'; // Default field to sort by
+    }
+    if (!['asc', 'desc'].includes(sortOrder)) {
+      sortOrder = 'desc'; // Default sorting order
+    }
+    const sort = { [sortKey]: sortOrder === 'desc' ? -1 : 1 };
 
-    // Log the constructed query
-    console.log('Search Criteria:', JSON.stringify(searchData, null, 2));
-    console.log('Pagination:', { skip, limit });
-    console.log('Sorting:', sort);
+    // Log the constructed query (conditionally based on environment)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Search Criteria:', JSON.stringify(searchData, null, 2));
+      console.log('Pagination:', { skip, limit });
+      console.log('Sorting:', sort);
+    }
 
     // Count and fetch data
     const countPromise = RecommendationsModel.aggregate([
@@ -245,6 +252,16 @@ const getRecommendations = async (filter = {}, options = {}) => {
       lastPage: totalPages,
     };
 
+    // Handle no results case
+    if (!results || results.length === 0) {
+      return {
+        status: 404,
+        message: 'No recommendations found.',
+        data: [],
+        pagination,
+      };
+    }
+
     return {
       status: 200,
       message: 'Recommendations retrieved successfully.',
@@ -260,6 +277,7 @@ const getRecommendations = async (filter = {}, options = {}) => {
     };
   }
 };
+
 
 module.exports = {
   addRecommendation,
