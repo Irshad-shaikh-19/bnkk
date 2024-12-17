@@ -9,7 +9,7 @@ const getAllRecommendations = catchAsync(async (req, res) => {
   const filter = pick(req.query, ['search', 'category', 'rewardType', 'isActive', 'expiresAt']);
   const options = pick(req.query, ['sortBy', 'limit', 'page']);
 
-  const { status, message, data } = await recommendationsService.getAllRecommendations(filter, options);
+  const { status, message, data } = await recommendationsService.getRecommendations(filter, options);
   const pagination = data?.pagination || {};
   res.status(status).send({ status, message, data: data.recommendations, pagination });
 });
