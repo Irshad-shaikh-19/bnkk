@@ -74,14 +74,12 @@ const updateRecommendationStatus = async (id, userId, bodyData, info) => {
       };
     }
 
-    // Toggle the isActive field from the bodyData
     const updatedData = await RecommendationsModel.findByIdAndUpdate(
       id,
       { isActive: bodyData.isActive }, // Using isActive boolean field from bodyData
       { new: true, runValidators: true }
     );
 
-    // Log the action: either updating or deleting based on the status (isActive)
     const actionType = bodyData.isActive ? 'UPDATE' : 'DELETE';
     await systemLog(actionType, updatedData, userId, 'update-recommendation-status', existingData, info);
 
@@ -102,7 +100,6 @@ const updateRecommendationStatus = async (id, userId, bodyData, info) => {
     };
   }
 };
-
 
 // Get recommendation details by ID
 const getRecommendationById = async (id) => {
@@ -186,29 +183,69 @@ const updateRecommendationDetails = async (id, userId, bodyData, info) => {
   }
 };
 
-// Get all active recommendations with pagination
-const getRecommendations = async (page = 1, limit = 10) => {
+// Get all active recommendations with pagination and search
+const getRecommendations = async (filter = {}, options = {}) => {
   try {
+    const { search = '', category = '', isActive = true } = filter;
+    const { page = 1, limit = 10, sortBy = 'createdAt:desc' } = options;
+
+    // Search criteria
+    let searchData = [{ isActive }];
+
+    if (search) {
+      const searchValue = { $regex: `.*${search}.*`, $options: 'i' };
+      searchData.push({
+        $or: [{ title: searchValue }, { description: searchValue }],
+      });
+    }
+
+    if (category) {
+      searchData.push({ category });
+    }
+
     const skip = (page - 1) * limit;
+    const sort = {};
+    const [sortKey, sortOrder] = sortBy.split(':');
+    sort[sortKey] = sortOrder === 'desc' ? -1 : 1;
 
-    const data = await RecommendationsModel.find({ isActive: true })
-      .skip(skip)
-      .limit(limit)
-      .sort({ createdAt: -1 });
+    const countPromise = RecommendationsModel.aggregate([
+      { $match: { $and: searchData } },
+      { $count: 'count' },
+    ]);
 
-    const total = await RecommendationsModel.countDocuments({ isActive: true });
-
-    return {
-      status: httpStatus.OK,
-      message: 'Recommendations retrieved successfully.',
-      data: {
-        recommendations: data,
-        pagination: {
-          currentPage: page,
-          totalPages: Math.ceil(total / limit),
-          totalRecords: total,
+    const docsPromise = RecommendationsModel.aggregate([
+      { $match: { $and: searchData } },
+      { $sort: sort },
+      { $skip: skip },
+      { $limit: limit },
+      {
+        $project: {
+          title: 1,
+          description: 1,
+          createdAt: 1,
+          rewardAmount: 1,
+          rewardType: 1,
+          category: 1,
         },
       },
+    ]);
+
+    const [totalCount, results] = await Promise.all([countPromise, docsPromise]);
+
+    const totalResults = totalCount[0]?.count || 0;
+    const totalPages = Math.ceil(totalResults / limit) || 1;
+    const pagination = {
+      length: totalResults,
+      size: limit,
+      page,
+      lastPage: totalPages,
+    };
+
+    return {
+      pagination,
+      message: 'Recommendations retrieved successfully.',
+      data: results,
+      status: httpStatus.OK,
     };
   } catch (error) {
     errorHandler.errorM({
