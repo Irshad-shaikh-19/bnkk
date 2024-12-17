@@ -15,6 +15,6 @@ router.post('/add', auth(), recommendationsController.addRecommendation);
 router.put('/update/:id', auth(), recommendationsController.updateRecommendation);
 
 // Toggle the isActive status of a recommendation
-router.patch('/toggle-status/:id', auth(), recommendationsController.toggleRecommendationStatus);
+router.put('/toggle-status/:id', auth(), recommendationsController.toggleRecommendationStatus);
 
 module.exports = router;
