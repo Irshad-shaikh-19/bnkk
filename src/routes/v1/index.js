@@ -15,6 +15,7 @@ const faqRoute = require('./faq.route');
 const userAccountsRoutes = require('./useraccount.route');
 const institutionsRoutes = require('./institution.route');
 const couponRoutes = require('./coupons.route');
+const recommendationsRoutes = require('./recommendations.route');
 const notificationTableRoute = require('./notification_table.route')
 const router = express.Router();
 
@@ -86,7 +87,12 @@ const defaultRoutes = [
   {
     path: '/notifications-table',
     route: notificationTableRoute,
-  }
+  },
+  {
+    path: '/recommendations',
+    route: recommendationsRoutes,
+  },
+
 ];
 
 defaultRoutes.forEach((route) => {
