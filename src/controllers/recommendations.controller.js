@@ -2,19 +2,7 @@ const catchAsync = require('../utils/catchAsync');
 const { recommendationsService } = require('../services');
 const pick = require('../utils/pick');
 
-// Middleware for validating pagination queries
-const validatePagination = (req, res, next) => {
-  const { limit, page } = req.query;
 
-  if (limit && (!Number.isInteger(+limit) || +limit <= 0)) {
-    return res.status(400).send({ message: 'Limit must be a positive integer.' });
-  }
-  if (page && (!Number.isInteger(+page) || +page <= 0)) {
-    return res.status(400).send({ message: 'Page must be a positive integer.' });
-  }
-
-  next();
-};
 
 // Get all recommendations with filters, pagination, and sorting
 const getAllRecommendations = catchAsync(async (req, res) => {
@@ -55,10 +43,33 @@ const updateRecommendation = catchAsync(async (req, res) => {
   res.status(status).send({ status, message, data });
 });
 
+
+// Toggle the isActive status of a recommendation
+const toggleRecommendationStatus = catchAsync(async (req, res) => {
+  const { id } = req.params;
+  const { isActive } = req.body;  // Assuming the request body contains 'isActive' field
+  const userId = req.user.id; // Extract userId from middleware
+  const info = req.headers['user-agent']; // Optional user-agent information
+
+  // Ensure 'isActive' is provided and is a boolean
+  if (typeof isActive !== 'boolean') {
+    return res.status(400).send({
+      status: 400,
+      message: '"isActive" should be a boolean value.',
+      data: {},
+    });
+  }
+
+  const { status, message, data } = await recommendationsService.updateRecommendationStatus(id, userId, { isActive }, info);
+
+  res.status(status).send({ status, message, data });
+});
+
 // Export controller functions
 module.exports = {
   getAllRecommendations,
   getRecommendationById,
+  toggleRecommendationStatus,
   addRecommendation,
   updateRecommendation,
 };

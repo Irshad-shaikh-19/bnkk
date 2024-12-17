@@ -74,13 +74,15 @@ const updateRecommendationStatus = async (id, userId, bodyData, info) => {
       };
     }
 
+    // Toggle the isActive field from the bodyData
     const updatedData = await RecommendationsModel.findByIdAndUpdate(
       id,
-      bodyData,
+      { isActive: bodyData.isActive }, // Using isActive boolean field from bodyData
       { new: true, runValidators: true }
     );
 
-    const actionType = parseInt(bodyData.status) === 2 ? 'DELETE' : 'UPDATE';
+    // Log the action: either updating or deleting based on the status (isActive)
+    const actionType = bodyData.isActive ? 'UPDATE' : 'DELETE';
     await systemLog(actionType, updatedData, userId, 'update-recommendation-status', existingData, info);
 
     return {
@@ -100,6 +102,7 @@ const updateRecommendationStatus = async (id, userId, bodyData, info) => {
     };
   }
 };
+
 
 // Get recommendation details by ID
 const getRecommendationById = async (id) => {
