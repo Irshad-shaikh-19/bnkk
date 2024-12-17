@@ -1,4 +1,5 @@
-const { Institution } = require('../models');
+const { Institution, UserAccounts } = require('../models');
+
 
 /**
  * Get institutions by Plaid Institution IDs
@@ -56,6 +57,9 @@ const getAllInstitutions = async () => {
         };
     }
 };
+
+
+
 
 module.exports = {
     getInstitutionsByPlaidIds,

@@ -16,4 +16,5 @@ module.exports.faqService = require('./faq.service');
 module.exports.userAccountService = require('./useraccount.service')
 module.exports.institutionsService = require('./institution.service');
 module.exports.couponService = require('./coupons.service');
+module.exports.recommendationsService = require('./recommendations.service');
 module.exports.notificationTableService = require('./notification_table.service')

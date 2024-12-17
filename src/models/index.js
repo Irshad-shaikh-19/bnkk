@@ -11,4 +11,5 @@ module.exports.NotificationModel = require('./notification.model');
 module.exports.FaqModel = require('./faq.model');
 module.exports.UserAccounts = require('./useraccount.model')
 module.exports.Institution = require('./institution.model')
+module.exports.RecommendationsModel = require('./recommendations.models')
 module.exports.Notification = require('./notification_table.model');

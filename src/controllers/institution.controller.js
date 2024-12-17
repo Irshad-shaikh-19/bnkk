@@ -27,6 +27,10 @@ const getAllInstitutionsController = catchAsync(async (req, res) => {
     res.status(institutions.status).send(institutions);
 });
 
+
+
+
+
 module.exports = {
     getInstitutionsByPlaidIdController,
     getAllInstitutionsController,
