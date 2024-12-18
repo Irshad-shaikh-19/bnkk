@@ -1,35 +1,47 @@
 const httpStatus = require('http-status');
-const mongoose = require('mongoose');
-const { RecommendationsModel } = require('../models');
-const errorHandler = require('../utils/error.handler');
+const Recommendations = require('../models/recommendations.model');
 const { systemLog } = require('../utils/system-log');
 
 // Add a new recommendation
-const addRecommendation = async (bodyData, userId, info) => {
+const addRecommendation = async (bodyData, info) => {
   try {
-    // Validate rewardType and category
-    const validRewardTypes = ['points', 'amount'];
-    const validCategories = ['daily', 'weekly', 'monthly', 'default'];
-
-    if (!validRewardTypes.includes(bodyData.rewardType)) {
+    // Manual validation of required fields
+    if (!bodyData.title || typeof bodyData.title !== 'string' || !bodyData.title.trim()) {
       return {
         status: httpStatus.BAD_REQUEST,
-        message: `Invalid rewardType. Allowed values: ${validRewardTypes.join(', ')}`,
+        message: 'Title is required and must be a non-empty string.',
         data: {},
       };
     }
 
-    if (!validCategories.includes(bodyData.category)) {
+    if (!bodyData.description || typeof bodyData.description !== 'string' || !bodyData.description.trim()) {
       return {
         status: httpStatus.BAD_REQUEST,
-        message: `Invalid category. Allowed values: ${validCategories.join(', ')}`,
+        message: 'Description is required and must be a non-empty string.',
         data: {},
       };
     }
 
-    // Check for duplicate title (case-insensitive)
-    const existingData = await RecommendationsModel.findOne({
-      title: { $regex: `^${bodyData.title}$`, $options: 'i' },
+  
+
+    if (
+      !bodyData.expiresAt ||
+      isNaN(Date.parse(bodyData.expiresAt)) ||
+      new Date(bodyData.expiresAt) <= new Date()
+    ) {
+      return {
+        status: httpStatus.BAD_REQUEST,
+        message: 'Expiration date must be a valid future date.',
+        data: {},
+      };
+    }
+
+    // Log attempt
+    await systemLog('CREATE_ATTEMPT', bodyData, null, 'add-recommendation', {}, info); // No userId is needed
+
+    // Check for duplicate title
+    const existingData = await Recommendations.findOne({
+      title: { $regex: `^${bodyData.title.trim()}$`, $options: 'i' },
       isActive: true,
     });
 
@@ -41,8 +53,11 @@ const addRecommendation = async (bodyData, userId, info) => {
       };
     }
 
-    const createdData = await RecommendationsModel.create(bodyData);
-    await systemLog('CREATE', createdData, userId, 'create-recommendation', {}, info);
+    // Create the recommendation
+    const createdData = await Recommendations.create(bodyData);
+
+    // Log success
+    await systemLog('CREATE_SUCCESS', createdData, null, 'add-recommendation', {}, info); // No userId is needed
 
     return {
       status: httpStatus.OK,
@@ -50,62 +65,58 @@ const addRecommendation = async (bodyData, userId, info) => {
       data: createdData,
     };
   } catch (error) {
-    errorHandler.errorM({
-      action_type: 'add-recommendation',
-      error_data: error,
-    });
+    console.error('Error in addRecommendation:', error);
+
     return {
       status: httpStatus.INTERNAL_SERVER_ERROR,
-      message: 'Something went wrong.',
+      message: 'Something went wrong while creating the recommendation.',
       data: {},
     };
   }
 };
 
-// Update recommendation status
-const updateRecommendationStatus = async (id, userId, bodyData, info) => {
+
+
+
+
+
+
+
+
+
+const updateRecommendationStatus = async (id, bodyData) => {
   try {
-    const existingData = await RecommendationsModel.findById(id);
-    if (!existingData) {
+    const updatedRecommendation = await Recommendations.findByIdAndUpdate(id, bodyData, { new: true });
+    if (!updatedRecommendation) {
       return {
         status: httpStatus.NOT_FOUND,
-        message: 'Recommendation not found!',
-        data: {},
+        message: 'Recommendation not found.',
       };
     }
 
-    const updatedData = await RecommendationsModel.findByIdAndUpdate(
-      id,
-      { isActive: bodyData.isActive }, // Using isActive boolean field from bodyData
-      { new: true, runValidators: true }
-    );
-
-    const actionType = bodyData.isActive ? 'UPDATE' : 'DELETE';
-    await systemLog(actionType, updatedData, userId, 'update-recommendation-status', existingData, info);
-
     return {
       status: httpStatus.OK,
-      message: 'Recommendation status updated successfully.',
-      data: updatedData,
+      message: 'Updated successfully.',
+      data: updatedRecommendation, // Include updated data
     };
   } catch (error) {
-    errorHandler.errorM({
-      action_type: 'update-recommendation-status',
-      error_data: error,
-    });
+    console.error('Error in updateRecommendationStatus:', error);
     return {
-      status: httpStatus.INTERNAL_SERVER_ERROR,
+      status: httpStatus.BAD_REQUEST,
       message: 'Something went wrong.',
-      data: {},
     };
   }
 };
+
+
+
+
 
 // Get recommendation details by ID
 const getRecommendationById = async (id) => {
   try {
-    const recommendation = await RecommendationsModel.findById(id);
-
+    // Find the recommendation by its ID
+    const recommendation = await Recommendations.findById(id);
     if (!recommendation) {
       return {
         status: httpStatus.NOT_FOUND,
@@ -120,23 +131,33 @@ const getRecommendationById = async (id) => {
       data: recommendation,
     };
   } catch (error) {
-    errorHandler.errorM({
-      action_type: 'get-recommendation-by-id',
-      error_data: error,
-    });
+    console.error('Error in getRecommendationById:', error);
     return {
       status: httpStatus.INTERNAL_SERVER_ERROR,
-      message: 'Something went wrong.',
+      message: 'Something went wrong while fetching the recommendation.',
       data: {},
     };
   }
 };
 
-// Update recommendation details
-const updateRecommendationDetails = async (id, userId, bodyData, info) => {
+
+
+// Update recommendation details (e.g., title, description, etc.)
+const updateRecommendationDetails = async (id,  bodyData) => {
   try {
-    const existingRecommendation = await RecommendationsModel.findById(id);
-    if (!existingRecommendation) {
+    // Ensure expiration date is valid
+    if (bodyData.expiresAt && new Date(bodyData.expiresAt) <= new Date()) {
+      return {
+        status: httpStatus.BAD_REQUEST,
+        message: 'Expiration date must be in the future.',
+        data: {},
+      };
+    }
+
+    // Update the recommendation with the new data
+    const updatedData = await Recommendations.findByIdAndUpdate(id, bodyData, { new: true });
+
+    if (!updatedData) {
       return {
         status: httpStatus.NOT_FOUND,
         message: 'Recommendation not found!',
@@ -144,139 +165,79 @@ const updateRecommendationDetails = async (id, userId, bodyData, info) => {
       };
     }
 
-    const duplicateTitle = await RecommendationsModel.findOne({
-      title: { $regex: `^${bodyData.title}$`, $options: 'i' },
-      _id: { $ne: id },
-    });
-
-    if (duplicateTitle) {
-      return {
-        status: httpStatus.BAD_REQUEST,
-        message: 'Recommendation with the same title already exists!',
-        data: {},
-      };
-    }
-
-    const updatedData = await RecommendationsModel.findByIdAndUpdate(
-      id,
-      bodyData,
-      { new: true, runValidators: true }
-    );
-
-    await systemLog('UPDATE', updatedData, userId, 'update-recommendation-details', existingRecommendation, info);
+    // Log the update action
+    await systemLog('UPDATE', updatedData, userId, 'update-recommendation-details', {}, info);
 
     return {
       status: httpStatus.OK,
-      message: 'Recommendation details updated successfully.',
+      message: 'Recommendation updated successfully.',
       data: updatedData,
     };
   } catch (error) {
-    errorHandler.errorM({
-      action_type: 'update-recommendation-details',
-      error_data: error,
-    });
+    console.error('Error in updateRecommendationDetails:', error);
     return {
       status: httpStatus.INTERNAL_SERVER_ERROR,
-      message: 'Something went wrong.',
+      message: 'Something went wrong while updating the recommendation.',
       data: {},
     };
   }
 };
 
+
 const getRecommendations = async (filter = {}, options = {}) => {
   try {
-    const { search = '', category = '', isActive = true } = filter;
+    const { search = '' } = filter;
     const { page = 1, limit = 10, sortBy = 'createdAt:desc' } = options;
 
-    // Build search criteria
-    const searchData = [{ isActive }];
+    // Build search query
+    const query = {};
     if (search.trim()) {
-      const searchValue = { $regex: `.*${search}.*`, $options: 'i' };
-      searchData.push({
-        $or: [{ title: searchValue }, { description: searchValue }],
-      });
-    }
-    if (category) {
-      searchData.push({ category });
+      query.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } },
+      ];
     }
 
-    // Pagination and sorting
-    const skip = (page - 1) * limit;
-    let [sortKey, sortOrder] = sortBy.split(':');
-    if (!['createdAt', 'rewardAmount', 'rewardType'].includes(sortKey)) {
-      sortKey = 'createdAt'; // Default field to sort by
-    }
-    if (!['asc', 'desc'].includes(sortOrder)) {
-      sortOrder = 'desc'; // Default sorting order
-    }
+    // Sorting and pagination
+    const [sortKey, sortOrder] = sortBy.split(':');
     const sort = { [sortKey]: sortOrder === 'desc' ? -1 : 1 };
+    const skip = (page - 1) * limit;
 
-    // Log the constructed query (conditionally based on environment)
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Search Criteria:', JSON.stringify(searchData, null, 2));
-      console.log('Pagination:', { skip, limit });
-      console.log('Sorting:', sort);
-    }
-
-    // Count and fetch data
-    const countPromise = RecommendationsModel.aggregate([
-      { $match: { $and: searchData } },
-      { $count: 'count' },
-    ]);
-    const docsPromise = RecommendationsModel.aggregate([
-      { $match: { $and: searchData } },
-      { $sort: sort },
-      { $skip: skip },
-      { $limit: limit },
-      {
-        $project: {
-          title: 1,
-          description: 1,
-          createdAt: 1,
-          rewardAmount: 1,
-          rewardType: 1,
-          category: 1,
-        },
-      },
+    // Fetch results and count in parallel
+    const [results, totalCount] = await Promise.all([
+      Recommendations.find(query)
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .select('title description rewardType isActive rewardAmount category expiresAt createdAt'),
+      Recommendations.countDocuments(query),
     ]);
 
-    // Wait for both promises to resolve
-    const [totalCount, results] = await Promise.all([countPromise, docsPromise]);
+    // Calculate total pages
+    const totalPages = Math.ceil(totalCount / limit);
 
-    const totalResults = totalCount[0]?.count || 0;
-    const totalPages = Math.ceil(totalResults / limit) || 1;
-    const pagination = {
-      length: totalResults,
-      size: limit,
-      page,
-      lastPage: totalPages,
-    };
-
-    // Handle no results case
-    if (!results || results.length === 0) {
-      return {
-        status: 404,
-        message: 'No recommendations found.',
-        data: [],
-        pagination,
-      };
-    }
-
+    // Return response
     return {
-      status: 200,
+      status: httpStatus.OK,
       message: 'Recommendations retrieved successfully.',
       data: results,
-      pagination,
+      pagination: {
+        page,         // Current page
+        limit,        // Number of items per page
+        totalCount,   // Total records
+        totalPages,   // Total pages
+      },
     };
   } catch (error) {
     console.error('Error in getRecommendations:', error);
     return {
-      status: 500,
-      message: 'Something went wrong.',
+      status: httpStatus.INTERNAL_SERVER_ERROR,
+      message: 'Something went wrong while fetching the recommendations.',
       data: {},
     };
   }
 };
+
 
 
 module.exports = {

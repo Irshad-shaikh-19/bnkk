@@ -13,6 +13,6 @@ module.exports.notificationController = require('./notification.controller');
 module.exports.faqController = require('./faq.controller');
 module.exports.userAccountController = require('./useraccount.controller')
 module.exports.institutionsController = require('./institution.controller');
-module.exports.recommendationsController = require('./recommendations.controller');
+module.exports.recommendationsController = require('./recommendations.controller')
 module.exports.couponController = require('./coupons.controller');
 module.exports.notificationTableController = require('./notification_table.controller');

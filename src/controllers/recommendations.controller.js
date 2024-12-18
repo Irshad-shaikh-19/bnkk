@@ -1,94 +1,71 @@
 const catchAsync = require('../utils/catchAsync');
 const { recommendationsService } = require('../services');
 const pick = require('../utils/pick');
+const httpStatus = require('http-status');
 
+// Centralized response handler
+const handleResponse = (res, { status, message, data, pagination = null }) => {
+  res.status(status).send({ status, message, data, pagination });
+};
 
-
-// Get all recommendations with filters, pagination, and sorting
+// Get all recommendations (with search and pagination)
 const getAllRecommendations = catchAsync(async (req, res) => {
-  // Extract query parameters from the request
-  const filter = pick(req.query, ['search', 'category', 'isActive']);  // Picking filters for search, category, and isActive
-  const options = pick(req.query, ['sortBy', 'limit', 'page']);  // Picking pagination and sorting options
+  const filter = pick(req.query, ['search']);
+  const options = pick(req.query, ['sortBy', 'limit', 'page']);
 
-  console.log('Filter:', filter);  // Logs the applied filters
-  console.log('Options:', options);  // Logs the pagination and sorting options
-
-  // Default pagination and sorting options
-  const defaultOptions = {
-    limit: options.limit ? parseInt(options.limit) : 10,  // If limit exists, use it, otherwise default to 10
-    page: options.page ? parseInt(options.page) : 1,  // If page exists, use it, otherwise default to 1
-    sortBy: options.sortBy || 'createdAt:desc',  // If sortBy exists, use it, otherwise default to createdAt:desc
-  };
-
-  // Fetch recommendations using the service function
-  const { status, message, data, pagination } = await recommendationsService.getRecommendations(filter, defaultOptions);
-
-  // Send the response to the client
-  res.status(status).send({
-    status,  // The status code of the response
-    message,  // A message (could be success/error)
-    data,  // The data of the recommendations
-    pagination,  // Pagination info (total count, page, etc.)
+  const response = await recommendationsService.getRecommendations(filter, {
+    limit: parseInt(options.limit) || 10,
+    page: parseInt(options.page) || 1,
+    sortBy: options.sortBy || 'createdAt:desc',
   });
+
+  handleResponse(res, response);
 });
 
 
-// Get recommendation details by ID
+
+// Get recommendation by ID
 const getRecommendationById = catchAsync(async (req, res) => {
-  const { status, message, data } = await recommendationsService.getRecommendationById(req.params.id);
-  if (!data) {
-    return res.status(status).send({ status, message, data: null });
-  }
-  res.status(status).send({ status, message, data });
+  const response = await recommendationsService.getRecommendationById(req.params.id);
+  handleResponse(res, response);
 });
 
-// Add a new recommendation
+
+
 const addRecommendation = catchAsync(async (req, res) => {
-  const userId = req.user.id; // Extract userId from middleware
-  const info = req.headers['user-agent']; // Optional user-agent information
+  const bodyData = req.body; // Get the body data (no need for user authentication if not used)
 
-  const { status, message, data } = await recommendationsService.addRecommendation(req.body, userId, info);
-  res.status(status).send({ status, message, data });
+  const response = await recommendationsService.addRecommendation(bodyData); // Call the service with the bodyData
+  handleResponse(res, response); // Send back the response
 });
 
-// Update an existing recommendation
+
+// Update recommendation details
 const updateRecommendation = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const updates = req.body; // Extract updates from request body
-  const userId = req.user.id; // Extract userId from middleware
-  const info = req.headers['user-agent']; // Optional user-agent information
 
-  const { status, message, data } = await recommendationsService.updateRecommendationDetails(id, userId, updates, info);
-  res.status(status).send({ status, message, data });
+
+  const response = await recommendationsService.updateRecommendationDetails(id, req.body);
+  handleResponse(res, response);
 });
 
 
-// Toggle the isActive status of a recommendation
+
+//Toggle recommendation status
 const toggleRecommendationStatus = catchAsync(async (req, res) => {
   const { id } = req.params;
-  const { isActive } = req.body;  // Assuming the request body contains 'isActive' field
-  const userId = req.user.id; // Extract userId from middleware
-  const info = req.headers['user-agent']; // Optional user-agent information
+  const { isActive } = req.body;
 
-  // Ensure 'isActive' is provided and is a boolean
-  if (typeof isActive !== 'boolean') {
-    return res.status(400).send({
-      status: 400,
-      message: '"isActive" should be a boolean value.',
-      data: {},
-    });
-  }
-
-  const { status, message, data } = await recommendationsService.updateRecommendationStatus(id, userId, { isActive }, info);
-
-  res.status(status).send({ status, message, data });
+  // Wrap `isActive` in an object for correct MongoDB update format
+  const response = await recommendationsService.updateRecommendationStatus(id, { isActive });
+  handleResponse(res, response);
 });
 
-// Export controller functions
+
 module.exports = {
   getAllRecommendations,
   getRecommendationById,
-  toggleRecommendationStatus,
   addRecommendation,
   updateRecommendation,
+  toggleRecommendationStatus,
 };
