@@ -1,145 +1,48 @@
-const { db, rtdb, messaging } = require('../config/firebaseAdmin'); // Import Firebase configuration
-const Notification = require('../models/notification_table.model'); // Notification model
+// src/services/notification.service.js
 
-// Function to create a new notification and store it in both MongoDB and Firebase
-const createNotification = async (notificationData) => {
-  try {
-    // Save notification in MongoDB
-    const newNotification = new Notification(notificationData);
-    await newNotification.save();
+const Notification = require('../models/notification_table.model');
+const { systemLog } = require('../utils/system-log');  // Import systemLog
 
-    // Save notification to Firebase Realtime Database
-    const firebaseNotificationRef = rtdb.ref('notifications').push();
-    await firebaseNotificationRef.set({
-      title: notificationData.title,
-      description: notificationData.description,
-      image: notificationData.image,
-      createdAt: new Date().toISOString(),
-    });
-
-    // Send a push notification to all users via Firebase Cloud Messaging
-    await sendPushNotification(notificationData.title, notificationData.description);
-
-    // Return the newly created notification
-    return newNotification;
-  } catch (error) {
-    console.error('Error creating notification:', error);
-    throw new Error('Error creating notification');
-  }
+const createNotification = async (data, info) => {  // Add info parameter for logging
+  const notification = new Notification(data);
+  const savedNotification = await notification.save();
+  // Log the creation of the notification
+  await systemLog('CREATE', data, savedNotification._id, 'create-notification', savedNotification, info);
+  return savedNotification;
 };
 
-// Function to send a push notification to all users via Firebase Cloud Messaging
-const sendPushNotification = async (title, body) => {
-  const message = {
-    notification: {
-      title: title,
-      body: body,
-    },
-    topic: 'all', // You can use specific topics like user IDs if needed
-  };
-
-  try {
-    const response = await messaging.send(message);
-    console.log('Notification sent successfully:', response);
-    return response;
-  } catch (error) {
-    console.error('Error sending push notification:', error);
-    throw new Error('Error sending push notification');
-  }
-};
-
-// Function to get all notifications with pagination
 const getNotifications = async (page, limit) => {
-  try {
-    const notifications = await Notification.find()
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .sort({ createdAt: -1 });
+  const skip = (page - 1) * limit; // Calculate the number of documents to skip
+  const total = await Notification.countDocuments(); // Total number of notifications
+  const notifications = await Notification.find()
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
 
-    const total = await Notification.countDocuments();
-    const totalPages = Math.ceil(total / limit);
-
-    return {
-      notifications,
-      total,
-      currentPage: page,
-      totalPages,
-    };
-  } catch (error) {
-    console.error('Error fetching notifications:', error);
-    throw new Error('Error fetching notifications');
-  }
-};
-
-// Function to get a notification by its ID
-const getNotificationById = async (id) => {
-  try {
-    const notification = await Notification.findById(id);
-    if (!notification) {
-      throw new Error('Notification not found');
-    }
-
-    return notification;
-  } catch (error) {
-    console.error('Error fetching notification by ID:', error);
-    throw new Error('Error fetching notification by ID');
-  }
-};
-
-// Function to update a notification
-const updateNotification = async (id, updateData) => {
-  try {
-    const updatedNotification = await Notification.findByIdAndUpdate(id, updateData, {
-      new: true,
-    });
-    if (!updatedNotification) {
-      throw new Error('Notification not found');
-    }
-
-    return updatedNotification;
-  } catch (error) {
-    console.error('Error updating notification:', error);
-    throw new Error('Error updating notification');
-  }
-};
-
-// Function to delete a notification
-const deleteNotification = async (id) => {
-  try {
-    const deletedNotification = await Notification.findByIdAndDelete(id);
-    if (!deletedNotification) {
-      throw new Error('Notification not found');
-    }
-
-    // Optionally, delete the notification from Firebase Realtime Database
-    const firebaseNotificationRef = rtdb.ref('notifications').child(id);
-    await firebaseNotificationRef.remove();
-
-    return deletedNotification;
-  } catch (error) {
-    console.error('Error deleting notification:', error);
-    throw new Error('Error deleting notification');
-  }
-};
-
-// Function to send notifications to specific topics (e.g., specific users or groups)
-const sendNotificationToTopic = async (title, body, topic) => {
-  const message = {
-    notification: {
-      title: title,
-      body: body,
-    },
-    topic: topic, // For example, 'user123' for a specific user
+  return {
+    notifications,
+    total,
+    currentPage: page,
+    totalPages: Math.ceil(total / limit),
   };
+};
 
-  try {
-    const response = await messaging.send(message);
-    console.log(`Notification sent to ${topic}:`, response);
-    return response;
-  } catch (error) {
-    console.error(`Error sending push notification to ${topic}:`, error);
-    throw new Error(`Error sending push notification to ${topic}`);
-  }
+const getNotificationById = async (id) => {
+  return Notification.findById(id);
+};
+
+const updateNotification = async (id, data, info) => {  // Add info parameter for logging
+  const updatedNotification = await Notification.findByIdAndUpdate(id, data, { new: true });
+  // Log the update of the notification
+  await systemLog('UPDATE', data, id, 'update-notification', updatedNotification, info);
+  return updatedNotification;
+};
+
+const deleteNotification = async (id, info) => {  // Add info parameter for logging
+  const deletedNotification = await Notification.findByIdAndDelete(id);
+  // Log the deletion of the notification
+  await systemLog('DELETE', { id }, id, 'delete-notification', deletedNotification, info);
+  return deletedNotification;
 };
 
 module.exports = {
@@ -148,6 +51,4 @@ module.exports = {
   getNotificationById,
   updateNotification,
   deleteNotification,
-  sendPushNotification,
-  sendNotificationToTopic,
 };
