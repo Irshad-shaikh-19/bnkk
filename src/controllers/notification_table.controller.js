@@ -1,11 +1,13 @@
-// src/controllers/notification.controller.js
 const catchAsync = require('../utils/catchAsync');
 const notificationTableService = require('../services/notification_table.service');
 const httpStatus = require('http-status');
 
+// Controller for creating notification
 const createNotification = catchAsync(async (req, res) => {
   try {
+    // Calling the service to create the notification and send push notification
     const notification = await notificationTableService.createNotification(req.body);
+    
     return res.status(httpStatus.CREATED).json({
       status: httpStatus.CREATED,
       message: 'Notification created successfully',
@@ -20,6 +22,9 @@ const createNotification = catchAsync(async (req, res) => {
   }
 });
 
+
+
+// Get all notifications with pagination
 const getNotifications = catchAsync(async (req, res) => {
   try {
     const { page = 1, limit = 10 } = req.query; // Default to page 1 and limit 10
@@ -44,6 +49,7 @@ const getNotifications = catchAsync(async (req, res) => {
   }
 });
 
+// Get a single notification by ID
 const getNotificationById = catchAsync(async (req, res) => {
   try {
     const notification = await notificationTableService.getNotificationById(req.params.id);
@@ -67,6 +73,7 @@ const getNotificationById = catchAsync(async (req, res) => {
   }
 });
 
+// Update a notification
 const updateNotification = catchAsync(async (req, res) => {
   try {
     const notification = await notificationTableService.updateNotification(req.params.id, req.body);
@@ -90,6 +97,7 @@ const updateNotification = catchAsync(async (req, res) => {
   }
 });
 
+// Delete a notification
 const deleteNotification = catchAsync(async (req, res) => {
   try {
     const notification = await notificationTableService.deleteNotification(req.params.id);

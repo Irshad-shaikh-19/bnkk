@@ -474,7 +474,7 @@ const updateTransactionDetails = async (id, updates) => {
     const institutionUpdate = {};
 
     for (const key in updates) {
-      if (['amount', 'b4nkdCategory', 'b4nkdValuePoint', 'transactionDate', 'paymentMethod', 'paymentChannel', 'personalFinanceCategoryPrimary', 'category', 'institution'].includes(key)) {
+      if (['amount', 'isPending', 'b4nkdCategory', 'b4nkdValuePoint', 'transactionDate', 'paymentMethod', 'paymentChannel', 'personalFinanceCategoryPrimary', 'category', 'institution'].includes(key)) {
         transactionUpdate[key] = updates[key];
       } else if (['firstName', 'lastName'].includes(key)) {
         userProfileUpdate[key] = updates[key];
