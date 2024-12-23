@@ -1,13 +1,16 @@
-// src/routes/notification.routes.js
-
 const router = require('express').Router();
 const auth = require('../../middlewares/auth');
-const notificationTableController = require('../../controllers/notification_table.controller');
+const notificationController = require('../../controllers/notification_table.controller');
 
-router.post('/create',auth(), notificationTableController.createNotification);
-router.get('/get-list',auth(), notificationTableController.getNotifications);
-router.get('/get-by-id/:id',auth(), notificationTableController.getNotificationById);
-router.put('/:id',auth(), notificationTableController.updateNotification);
-router.delete('/:id',auth(), notificationTableController.deleteNotification);
+// Static routes first
+router.post('/create', auth(), notificationController.createNotification);
+router.post('/send', auth(), notificationController.sendNotification);
+router.get('/list', auth(), notificationController.getNotifications);
+
+// Dynamic routes last
+router.get('/:id', auth(), notificationController.getNotificationById);
+router.put('/:id', auth(), notificationController.updateNotification);
+router.delete('/:id', auth(), notificationController.deleteNotification);
+
 
 module.exports = router;

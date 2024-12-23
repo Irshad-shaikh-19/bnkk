@@ -17,6 +17,7 @@ const institutionsRoutes = require('./institution.route');
 const couponRoutes = require('./coupons.route');
 const recommendationsRoutes = require('./recommendations.route')
 const notificationTableRoute = require('./notification_table.route')
+const fcmtokenRoute = require('./fcmtoken.route')
 const router = express.Router();
 
 const defaultRoutes = [
@@ -91,7 +92,12 @@ const defaultRoutes = [
   {
     path: '/notifications-table',
     route: notificationTableRoute,
-  }
+  },
+  {
+    path: '/fcmtoken',
+    route: fcmtokenRoute,
+  },
+
 ];
 
 defaultRoutes.forEach((route) => {

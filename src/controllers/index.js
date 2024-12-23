@@ -16,3 +16,4 @@ module.exports.institutionsController = require('./institution.controller');
 module.exports.recommendationsController = require('./recommendations.controller')
 module.exports.couponController = require('./coupons.controller');
 module.exports.notificationTableController = require('./notification_table.controller');
+module.exports.fcmtokenController = require('./fcmtoken.controller')
