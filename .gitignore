@@ -41,7 +41,7 @@ build/Release
 # Dependency directories
 node_modules/
 jspm_packages/
-firebase_cofiguration.json
+firebase_configuration.json
 
 
 # Snowpack dependency directory (https://snowpack.dev/)
