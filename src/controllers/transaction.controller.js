@@ -17,6 +17,11 @@ const getAllTransactionDetails = catchAsync(async (req, res) => {
   res.send({ status, message, data, pagination });
 });
 
+const getUserTransactionPercentages = catchAsync(async (req, res) => {
+  const { status, data } = await transactionsService.getUserTransactionPercentages();
+  res.status(status).send({ data });
+});
+
 const getTransactionDetailsById = catchAsync(async (req, res) => {
   const { status, message, data } =
     await transactionsService.getTransactionDetailsById(req.params.id);
@@ -54,5 +59,6 @@ module.exports = {
   getAllTransactionDetails,
   getTransactionDetailsById,
   GetTransactionsByInstitutionAndUser,
-  updateTransactionDetails
+  updateTransactionDetails,
+  getUserTransactionPercentages
 };

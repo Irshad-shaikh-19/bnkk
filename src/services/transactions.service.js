@@ -5,6 +5,7 @@ const httpStatus = require('http-status');
 const errorHandler = require('../utils/error.handler');
 const { concateDate } = require('../utils/date');
 const { systemLog } = require('../utils/system-log');
+
 const getAllTransactionDetails = async (filter, options) => {
   try {
     let searchData = [];
@@ -455,12 +456,6 @@ const GetTransactionsByInstitutionAndUser = async (filter, options) => {
 };
 
 
-
-
-
-
-
-
 const updateTransactionDetails = async (id, updates) => {
   try {
     // Ensure amount is a number and valid
@@ -607,9 +602,350 @@ const updateTransactionDetails = async (id, updates) => {
   }
 };
 
+
+// const getUserTransactionPercentages = async () => {
+//   try {
+//     let aggregationPipeline = [
+//       {
+//         $lookup: {
+//           from: 'userprofiles',
+//           let: { userId: { $toString: "$user" } },
+//           pipeline: [
+//             { $match: { $expr: { $eq: [{ $toString: "$user" }, "$$userId"] } } }
+//           ],
+//           as: 'user_data',
+//         },
+//       },
+//       {
+//         $unwind: {
+//           path: "$user_data",
+//           preserveNullAndEmptyArrays: false,
+//         },
+//       },
+//       {
+//         $match: { b4nkdValuePoint: { $in: ["Needs", "Needs II", "Wants", "Savings"] } }
+//       },
+//       {
+//         $group: {
+//           _id: "$user",
+//           fullName: {
+//             $first: {
+//               $concat: ["$user_data.firstName", " ", "$user_data.lastName"],
+//             },
+//           },
+//           totalAmount: { $sum: "$amount" },
+//           needsAmount: {
+//             $sum: {
+//               $cond: [{ $eq: ["$b4nkdValuePoint", "Needs"] }, "$amount", 0],
+//             },
+//           },
+//           needsIIAmount: {
+//             $sum: {
+//               $cond: [{ $eq: ["$b4nkdValuePoint", "Needs II"] }, "$amount", 0],
+//             },
+//           },
+//           wantsAmount: {
+//             $sum: {
+//               $cond: [{ $eq: ["$b4nkdValuePoint", "Wants"] }, "$amount", 0],
+//             },
+//           },
+//           savingsAmount: {
+//             $sum: {
+//               $cond: [{ $eq: ["$b4nkdValuePoint", "Savings"] }, "$amount", 0],
+//             },
+//           },
+//         },
+//       },
+//       {
+//         $project: {
+//           fullName: 1,
+//           totalAmount: 1,
+//           needsPercentage: {
+//             $round: [{ $multiply: [{ $divide: ["$needsAmount", "$totalAmount"] }, 100] }, 0],
+//           },
+//           needsIIPercentage: {
+//             $round: [{ $multiply: [{ $divide: ["$needsIIAmount", "$totalAmount"] }, 100] }, 0],
+//           },
+//           wantsPercentage: {
+//             $round: [{ $multiply: [{ $divide: ["$wantsAmount", "$totalAmount"] }, 100] }, 0],
+//           },
+//           savingsPercentage: {
+//             $round: [{ $multiply: [{ $divide: ["$savingsAmount", "$totalAmount"] }, 100] }, 0],
+//           },
+//         },
+//       },
+//       {
+//         $addFields: {
+//           totalPercentage: {
+//             $add: ["$needsPercentage", "$needsIIPercentage", "$wantsPercentage", "$savingsPercentage"],
+//           },
+//           category: {
+//             $cond: [
+//               { $eq: ["$needsPercentage", 100] }, "Couch Potato", 
+//               {
+//                 $cond: [
+//                   {
+//                     $and: [
+//                       { $eq: ["$needsPercentage", 70] },
+//                       { $eq: ["$needsIIPercentage", 30] }
+//                     ]
+//                   }, "In Training",  
+//                   {
+//                     $cond: [
+//                       {
+//                         $and: [
+//                           { $eq: ["$needsPercentage", 40] },
+//                           { $eq: ["$needsIIPercentage", 30] },
+//                           { $eq: ["$wantsPercentage", 20] },
+//                           { $eq: ["$savingsPercentage", 10] }
+//                         ]
+//                       }, "Athlete", 
+//                       {
+//                         $cond: [
+//                           {
+//                             $and: [
+//                               { $eq: ["$needsPercentage", 35] },
+//                               { $eq: ["$needsIIPercentage", 20] },
+//                               { $eq: ["$wantsPercentage", 25] },
+//                               { $eq: ["$savingsPercentage", 20] }
+//                             ]
+//                           }, "Ironman", 
+//                           "Uncategorized"  
+//                         ]
+//                       }
+//                     ]
+//                   }
+//                 ]
+//               }
+//             ]
+//           }
+//         },
+//       },
+//       {
+//         $match: {
+//           totalPercentage: { $lte: 100.01 },  
+//         },
+//       },
+//     ];
+
+//     const results = await collection.aggregate(aggregationPipeline).toArray();
+//     console.log("Aggregation Results:", results);
+//     return {
+//       status: httpStatus.OK,
+//       data: results,
+//     };
+//   } catch (error) {
+//     console.error("Aggregation Error:", error);
+//     errorHandler.errorM({
+//       action_type: 'get-user-transaction-percentages',
+//       error_data: error,
+//     });
+//     return {
+//       status: httpStatus.BAD_REQUEST,
+//       message: 'Something Went Wrong.',
+//     };
+//   }
+// };
+
+
+// const getUserTransactionPercentages = async () => {
+//   try {
+//     let aggregationPipeline = [
+//       {
+//         $lookup: {
+//           from: 'userprofiles',
+//           let: { userId: { $toString: "$user" } },
+//           pipeline: [
+//             { $match: { $expr: { $eq: [{ $toString: "$user" }, "$$userId"] } } }
+//           ],
+//           as: 'user_data',
+//         },
+//       },
+//       {
+//         $unwind: {
+//           path: "$user_data",
+//           preserveNullAndEmptyArrays: false,
+//         },
+//       },
+//       {
+//         $match: { b4nkdValuePoint: { $in: ["Needs", "Needs II", "Wants", "Savings"] } }
+//       },
+//       {
+//         $group: {
+//           _id: "$user",
+//           fullName: {
+//             $first: {
+//               $concat: ["$user_data.firstName", " ", "$user_data.lastName"],
+//             },
+//           },
+//           totalAmount: { $sum: "$amount" },
+//           needsAmount: {
+//             $sum: {
+//               $cond: [{ $eq: ["$b4nkdValuePoint", "Needs"] }, "$amount", 0],
+//             },
+//           },
+//           needsIIAmount: {
+//             $sum: {
+//               $cond: [{ $eq: ["$b4nkdValuePoint", "Needs II"] }, "$amount", 0],
+//             },
+//           },
+//           wantsAmount: {
+//             $sum: {
+//               $cond: [{ $eq: ["$b4nkdValuePoint", "Wants"] }, "$amount", 0],
+//             },
+//           },
+//           savingsAmount: {
+//             $sum: {
+//               $cond: [{ $eq: ["$b4nkdValuePoint", "Savings"] }, "$amount", 0],
+//             },
+//           },
+//         },
+//       },
+//       {
+//         $project: {
+//           fullName: 1,
+//           totalAmount: 1,
+//           needsPercentage: {
+//             $round: [{ $multiply: [{ $divide: ["$needsAmount", "$totalAmount"] }, 100] }, 0],
+//           },
+//           needsIIPercentage: {
+//             $round: [{ $multiply: [{ $divide: ["$needsIIAmount", "$totalAmount"] }, 100] }, 0],
+//           },
+//           wantsPercentage: {
+//             $round: [{ $multiply: [{ $divide: ["$wantsAmount", "$totalAmount"] }, 100] }, 0],
+//           },
+//           savingsPercentage: {
+//             $round: [{ $multiply: [{ $divide: ["$savingsAmount", "$totalAmount"] }, 100] }, 0],
+//           },
+//         },
+//       },
+      
+//       {
+//         $addFields: {
+//           totalPercentage: {
+//             $add: ["$needsPercentage", "$needsIIPercentage", "$wantsPercentage", "$savingsPercentage"],
+//           },
+//         },
+//       },
+//       {
+//         $match: {
+//           totalPercentage: { $lte: 100.01 },  
+//         },
+//       },
+//     ];
+
+//     const results = await collection.aggregate(aggregationPipeline).toArray();
+//     console.log("Aggregation Results:", results);
+//     return {
+//       status: httpStatus.OK,
+//       data: results,
+//     };
+//   } catch (error) {
+//     console.error("Aggregation Error:", error);
+//     errorHandler.errorM({
+//       action_type: 'get-user-transaction-percentages',
+//       error_data: error,
+//     });
+//     return {
+//       status: httpStatus.BAD_REQUEST,
+//       message: 'Something Went Wrong.',
+//     };
+//   }
+// };
+
+
+
+
+const getUserTransactionPercentages = async () => {
+  try {
+    let aggregationPipeline = [
+      {
+        $lookup: {
+          from: 'userprofiles',
+          let: { userId: { $toString: "$user" } },
+          pipeline: [
+            { $match: { $expr: { $eq: [{ $toString: "$user" }, "$$userId"] } } }
+          ],
+          as: 'user_data',
+        },
+      },
+      {
+        $unwind: {
+          path: "$user_data",
+          preserveNullAndEmptyArrays: false,
+        },
+      },
+      {
+        $group: {
+          _id: "$user",
+          fullName: {
+            $first: {
+              $concat: ["$user_data.firstName", " ", "$user_data.lastName"],
+            },
+          },
+          income: {
+            $sum: {
+              $cond: [{ $eq: ["$b4nkdValuePoint", "Income"] }, "$amount", 0],
+            },
+          },
+          expense: {
+            $sum: {
+              $cond: [{ $in: ["$b4nkdValuePoint", ["Needs", "Needs II", "Wants"]] }, "$amount", 0],
+            },
+          },
+        },
+      },
+      {
+        $addFields: {
+          category: {
+            $switch: {
+              branches: [
+                { case: { $lt: ["$income", "$expense"] }, then: "Couch Potato" },
+                { case: { $eq: ["$income", "$expense"] }, then: "In Training" },
+                { case: { $gt: ["$income", "$expense"] }, then: "Athlete" },
+                { case: { $gt: ["$income", { $multiply: [2, "$expense"] }] }, then: "Ironman" }
+              ],
+              default: "Uncategorized"
+            }
+          }
+        }
+      },
+      {
+        $project: {
+          fullName: 1,
+          income: 1,
+          expense: 1,
+          category: 1,
+        },
+      },
+    ];
+
+    const results = await collection.aggregate(aggregationPipeline).toArray();
+    console.log("Aggregation Results:", results);
+    return {
+      status: httpStatus.OK,
+      data: results,
+    };
+  } catch (error) {
+    console.error("Aggregation Error:", error);
+    errorHandler.errorM({
+      action_type: 'get-user-transaction-percentages',
+      error_data: error,
+    });
+    return {
+      status: httpStatus.BAD_REQUEST,
+      message: 'Something Went Wrong.',
+    };
+  }
+};
+
+
+
+
 module.exports = {
   getAllTransactionDetails,
   getTransactionDetailsById,
   GetTransactionsByInstitutionAndUser,
-  updateTransactionDetails
+  updateTransactionDetails,
+  getUserTransactionPercentages
 };

@@ -97,7 +97,7 @@ const updateRecommendationStatus = async (id, bodyData) => {
     return {
       status: httpStatus.OK,
       message: 'Updated successfully.',
-      data: updatedRecommendation, // Include updated data
+      data: updatedRecommendation, 
     };
   } catch (error) {
     console.error('Error in updateRecommendationStatus:', error);
@@ -115,7 +115,7 @@ const updateRecommendationStatus = async (id, bodyData) => {
 // Get recommendation details by ID
 const getRecommendationById = async (id) => {
   try {
-    // Find the recommendation by its ID
+   
     const recommendation = await Recommendations.findById(id);
     if (!recommendation) {
       return {

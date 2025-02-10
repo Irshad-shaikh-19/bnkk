@@ -3,12 +3,16 @@ const auth = require('../../middlewares/auth');
 const { transactionController } = require('../../controllers');
 
 router.get('/get-list', auth(), transactionController.getAllTransactionDetails);
+router.get('/get-percent-list',  transactionController.getUserTransactionPercentages);
+
 
 router.get(
   '/get-by-id/:id',
   auth(),
   transactionController.getTransactionDetailsById
 );
+
+
 router.get(
   '/get-by-institution-and-user',
   auth(),
