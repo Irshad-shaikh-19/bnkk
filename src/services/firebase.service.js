@@ -1,7 +1,7 @@
 require('dotenv').config(); // Load environment variables
 
 // Log the value of the private key to verify it's correctly loaded
-console.log(process.env.FIREBASE_PRIVATE_KEY);
+// console.log(process.env.FIREBASE_PRIVATE_KEY);
 
 const admin = require("firebase-admin");
 

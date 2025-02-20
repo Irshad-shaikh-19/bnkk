@@ -20,3 +20,4 @@ module.exports.recommendationsService = require('./recommendations.service');
 module.exports.notificationTableService = require('./notification_table.service')
 module.exports.firebaseService = require('./firebase.service')
 module.exports.fcmtokenService = require('./fcmtoken.service')
+module.exports.subscriptionService = require('./subscription.service')
