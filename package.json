@@ -50,7 +50,8 @@
     "socket.io": "^4.7.5",
     "validator": "^13.0.0",
     "winston": "^3.8.2",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "zlib": "^1.0.5"
   },
   "resolutions": {
     "@apidevtools/json-schema-ref-parser": "9.1.0"

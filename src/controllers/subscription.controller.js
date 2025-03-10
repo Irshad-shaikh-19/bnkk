@@ -3,79 +3,151 @@ const subscriptionService = require("../services/subscription.service");
 
 const getSalesReport = async (req, res) => {
     try {
-        const { vendorNumber, frequency, reportType, reportSubType, version } = req.query;
+        const { vendorNumber, frequency, reportType, reportSubType, version, reportDate } = req.query;
 
-       
-        if (![vendorNumber, frequency, reportType, reportSubType, version].every(Boolean)) {
+        // Ensure all required parameters are provided
+        if (![vendorNumber, frequency, reportType, reportSubType, version, reportDate].every(Boolean)) {
             return res.status(400).json({
-                error: "Missing required query parameters. Please provide vendorNumber, frequency, reportType, reportSubType, and version."
+                error: "Missing required query parameters. Please provide vendorNumber, frequency, reportType, reportSubType, version, and reportDate."
             });
         }
 
-        console.log("Fetching sales report with params:", { vendorNumber, frequency, reportType, reportSubType, version });
+        console.log("Fetching sales report with params:", { vendorNumber, frequency, reportType, reportSubType, version, reportDate });
 
-        const data = await subscriptionService.getSalesReportService(vendorNumber, frequency, reportType, reportSubType, version);
+        // Call the service function with the updated parameters
+        const data = await subscriptionService.getSalesReportService(vendorNumber, frequency, reportType, reportSubType, version, reportDate);
 
         res.status(200).json({
             success: true,
             data
         });
     } catch (error) {
-        console.error("Error in getSalesReportController:", error.response?.data || error.message);
-        
+        console.error("Error in getSalesReport Controller:", error.message);
+
         res.status(500).json({
             success: false,
-            error: error.response?.data || "Failed to fetch sales report."
+            error: error.message || "Failed to fetch sales report."
         });
     }
 };
+
+
+
+
 
 
 
 const getFinanceReport = async (req, res) => {
     try {
-        const { vendorNumber, reportDate, regionCode, reportType } = req.query;
+        const { vendorNumber, regionCode, reportType, reportDate } = req.query;
 
-        // Validate required parameters
-        if (![vendorNumber, reportDate, regionCode, reportType].every(Boolean)) {
-            return res.status(400).json({
-                error: "Missing required query parameters. Please provide vendorNumber, reportDate, regionCode, and reportType."
-            });
+        if (![vendorNumber, regionCode, reportType, reportDate].every(Boolean)) {
+            throw new Error("Missing required query parameters.");
         }
 
-        console.log("Fetching finance report with params:", { vendorNumber, reportDate, regionCode, reportType });
+        console.log("Fetching finance report with params:", { vendorNumber, regionCode, reportType, reportDate });
 
-        // Call the finance report service
-        const data = await subscriptionService.getFinanceReportService(vendorNumber, reportDate, regionCode, reportType);
+        const data = await subscriptionService.getfinanceService(vendorNumber, regionCode, reportType, reportDate);
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             data
         });
     } catch (error) {
-        console.error("Error in getFinanceReportController:", error.response?.data || error.message);
+        console.error("Error in Finance Controller:", {
+            message: error.message,
+            stack: error.stack,
+        });
 
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
-            error: error.response?.data || "Failed to fetch finance report."
+            error: {
+                message: error.message || "Unknown error occurred while fetching finance report.",
+                stack: process.env.NODE_ENV === "development" ? error.stack : "Stack trace hidden",
+            }
         });
     }
 };
 
-const getAppDetails = async (req, res) => {
+
+
+
+
+
+
+
+
+
+const getAppUsageReport = async (req, res) => {
     try {
-        const data = await subscriptionService.fetchAppDetails(); // Call the updated service function
-        res.json({ success: true, data });
+        const data = await subscriptionService.apps();
+        return res.status(200).json({ success: true, data });
+
     } catch (error) {
-        console.error("Error fetching app details:", error);
-        res.status(500).json({ success: false, error: error.message });
+        console.error("Error in getAppUsageReport Controller:", error);
+
+        // Ensure error has a status and message
+        const status = error.status || 500;
+        const message = error.message || "Internal Server Error";
+
+        return res.status(status).json({ error: message });
     }
-}
+};
+
+
+const getanalytics = async (req, res) => {
+    try {
+        const { appId } = req.params; // Assuming appId is passed in URL params
+        if (!appId) return res.status(400).json({ error: 'App ID is required' });
+
+        const data = await subscriptionService.getAnalyticsReportService(appId);
+        return res.status(200).json({ success: true, data });
+
+    } catch (error) {
+        console.error("Error in getanalytics Controller:", error);
+
+        const status = error.status || 500;
+        const message = error.message || "Internal Server Error";
+
+        return res.status(status).json({ error: message });
+    }
+};
+
+
+
+
+const getDownloadsReport = async (req, res) => {
+  try {
+    const { vendorNumber, frequency, startDate, endDate, measures, dimensions } = req.query;
+
+    // Ensure required parameters are provided
+    if (![vendorNumber, frequency, startDate, endDate, measures].every(Boolean)) {
+      return res.status(400).json({
+        error: "Missing required query parameters. Please provide vendorNumber, frequency, startDate, endDate, and measures."
+      });
+    }
+
+    console.log("Fetching downloads report with params:", { vendorNumber, frequency, startDate, endDate, measures, dimensions });
+
+    // Call the service function with the provided parameters
+    const data = await subscriptionService.getDownloadsReportService(vendorNumber, frequency, startDate, endDate, JSON.parse(measures), dimensions || []);
+
+    res.status(200).json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    console.error("Error in getDownloadsReport Controller:", error.message);
+
+    res.status(500).json({
+      success: false,
+      error: error.message || "Failed to fetch downloads report."
+    });
+  }
+};
 
 
 
 
 
-
-
-module.exports = { getSalesReport,getFinanceReport,getAppDetails };
+module.exports = { getSalesReport,getFinanceReport,getAppUsageReport,getanalytics,getDownloadsReport };
