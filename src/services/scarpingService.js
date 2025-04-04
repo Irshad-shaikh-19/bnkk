@@ -14,9 +14,13 @@ async function downloadAppleAnalytics() {
   console.log("🚀 Starting Apple Analytics Automation...");
 
   const browser = await chromium.launch({
-    headless: false, 
-    slowMo: 200,
-    args: ["--disable-blink-features=AutomationControlled", "--start-maximized"],
+    headless: true,  // ✅ FIXED: Changed to `true` to avoid X server issues
+    args: [
+      "--disable-blink-features=AutomationControlled",
+      "--no-sandbox",  // ✅ FIXED: Disable sandbox for cloud environments
+      "--disable-setuid-sandbox",
+      "--start-maximized"
+    ],
   });
 
   let context;
