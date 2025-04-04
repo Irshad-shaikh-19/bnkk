@@ -18,3 +18,4 @@ module.exports.couponController = require('./coupons.controller');
 module.exports.notificationTableController = require('./notification_table.controller');
 module.exports.fcmtokenController = require('./fcmtoken.controller')
 module.exports.subscriptionController = require('./subscription.controller')
+module.exports.analyticController = require('./analytics.controller')
