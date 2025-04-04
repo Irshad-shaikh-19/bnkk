@@ -29,9 +29,15 @@ const automateAnalytics = async (req, res) => {
       data: analyticsData,
     });
   } catch (error) {
-    console.error("❌ Automation failed:", error.message);
-    res.status(500).json({ error: "Automation failed" });
+    console.error("❌ Automation failed:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+      error,
+    });
+    res.status(500).json({ error: "Automation failed", detail: error.message });
   }
 };
+
 
 module.exports = { fetchAppleAnalytics, automateAnalytics };
