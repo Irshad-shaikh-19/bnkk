@@ -10,7 +10,7 @@
     "check-all": "concurrently \"yarn lint\" \"yarn prettier-check\"",
     "install-husky": "husky install",
     "start": "node src/index.js",
-    "install": "npx playwright install chromium"
+    "postinstall": "npx playwright install --with-deps"
   },
   "repository": "git@github.com:vijay-ctasis/BANK_TRANSACTION_BACKEND.git",
   "author": "surbhi-ctas <my.adresse@hotmail.com>",
