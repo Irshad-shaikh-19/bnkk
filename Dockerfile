@@ -6,6 +6,8 @@ COPY package.json yarn.lock ./
 
 RUN yarn install
 
+RUN npx playwright install
+
 COPY . .
 
 EXPOSE 3000
