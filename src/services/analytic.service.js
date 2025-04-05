@@ -11,7 +11,7 @@ const getAppleAnalyticsData = () => {
     }
 
     const lines = fs.readFileSync(filePath, "utf-8").split("\n");
-    const headerIndex = lines.findIndex(line => line.startsWith("Date,"));
+    const headerIndex = lines.findIndex(line => line.startsWith("Date,"))
     if (headerIndex === -1) {
       return reject(new Error("Header row not found in CSV"));
     }
