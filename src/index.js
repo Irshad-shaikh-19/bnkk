@@ -7,9 +7,9 @@ const socketEvents = require('./utils/socket');
 let server;
 mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
   logger.info('Connected to MongoDB');
-  const port = process.env.PORT || config.port || 8000;
+  const port = process.env.PORT || 8000;
   server = app.listen(port, () => {
-    logger.info(`Listening to port ${config.port}`);
+    logger.info(`Listening to port ${process.env.PORT}`);
   });
   const io = require('socket.io')(server, { cors: { origin: '*' } });
   socketEvents(io);
