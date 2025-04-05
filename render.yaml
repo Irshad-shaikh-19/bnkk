@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: playwright-app
+    env: docker
+    plan: free
+    dockerfilePath: Dockerfile
+    autoDeploy: true
+    branch: main

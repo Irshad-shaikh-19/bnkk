@@ -1,15 +1,13 @@
-FROM node:alpine
+FROM mcr.microsoft.com/playwright:v1.42.1-jammy
 
-RUN mkdir -p /usr/src/node-app && chown -R node:node /usr/src/node-app
+WORKDIR /usr/src/app
 
-WORKDIR /usr/src/node-app
+COPY package.json yarn.lock ./
 
-COPY package.json ./
+RUN yarn install
 
-USER node
-
-RUN yarn install --pure-lockfile
-
-COPY --chown=node:node . .
+COPY . .
 
 EXPOSE 3000
+
+CMD ["yarn", "start"]
