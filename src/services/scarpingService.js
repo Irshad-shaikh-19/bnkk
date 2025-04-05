@@ -14,7 +14,7 @@ async function downloadAppleAnalytics() {
   console.log("🚀 Starting Apple Analytics Automation...");
 
   const browser = await chromium.launch({
-    headless: false,
+    headless: true,
     slowMo: 200,
     args: [
         "--disable-blink-features=AutomationControlled",
