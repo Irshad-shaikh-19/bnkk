@@ -2,9 +2,10 @@ FROM mcr.microsoft.com/playwright:v1.42.1-jammy
 
 WORKDIR /usr/src/app
 
-COPY package.json yarn.lock ./
+COPY package.json package-lock.json ./
+RUN npm install
 
-RUN yarn install
+
 
 RUN npx playwright install
 
