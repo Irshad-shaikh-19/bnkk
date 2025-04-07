@@ -9,7 +9,7 @@ mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
   logger.info('Connected to MongoDB');
   const port = process.env.PORT || 8000;
   server = app.listen(port, () => {
-    logger.info(`Listening to port ${process.env.PORT}`);
+    logger.info(`Listening to port ${port}`);
   });
   const io = require('socket.io')(server, { cors: { origin: '*' } });
   socketEvents(io);

@@ -4,15 +4,10 @@ const analyticSchema = new mongoose.Schema({
     date:{
         type:Date
     },
-    active_users:{
+    views:{
         type:Number
     },
-    downloads:{
-        type:Number
-    },
-    revenue:{
-        type:Number
-    }
+    
 });
 
 const Analytic = mongoose.model('tbl_analytic', analyticSchema);
