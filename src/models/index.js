@@ -16,3 +16,4 @@ module.exports.Notification = require('./notification_table.model');
 module.exports.Fcmtoken = require('./fcmtoken.model')
 module.exports.Analytic = require('./analytics.model')
 module.exports.Impression = require('./impression.model')
+module.exports.Download = require('./download.model')

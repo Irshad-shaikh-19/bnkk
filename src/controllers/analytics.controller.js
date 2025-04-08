@@ -1,9 +1,12 @@
 const { downloadAppleAnalytics } = require("../services/scarpingService");
 const { downloadImpressionAnalytics } = require("../services/impressionService")
+const { downloadAppleDownloadAnalytics } = require("../services/downloadService")
 
-const { getAppleAnalyticsData,getAppleImpressionData } = require("../services/analytic.service");
+
+const { getAppleAnalyticsData,getAppleImpressionData,getAppleDownloadData } = require("../services/analytic.service");
 const Analytic = require("../models/analytics.model");
 const Impression = require("../models/impression.model");
+const Download = require("../models/download.model");
 
 
 // GET: Return parsed data from existing CSV
@@ -77,4 +80,39 @@ const automateImpressionAnalytics = async (req, res) => {
 };
 
 
-module.exports = { fetchAppleAnalytics, automateAnalytics, fetchAppleImpression,automateImpressionAnalytics };
+
+
+
+
+
+
+// GET: Impressions Data
+const fetchAppleDownload = async (req, res) => {
+  try {
+    const data = await Download.find().sort({ date: 1 });
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("❌ Error fetching Download Analytics:", error.message);
+    res.status(500).json({ message: "Failed to fetch impression data" });
+  }
+};
+
+
+// POST: Automate downloading Impressions data
+const automateDownloadAnalytics = async (req, res) => {
+  try {
+    console.log("🚀 Starting Analytics Automation (Downloads)...");
+    await downloadAppleDownloadAnalytics();
+    const downloadData = await getAppleDownloadData();
+    res.status(200).json({
+      message: "✅ Downloads data fetched!",
+      data: downloadData,
+    });
+  } catch (error) {
+    console.error("❌ Downloads Automation failed:", error.message);
+    res.status(500).json({ error: "Automation failed", detail: error.message });
+  }
+};
+
+
+module.exports = { fetchAppleAnalytics, automateAnalytics, fetchAppleImpression,automateImpressionAnalytics, fetchAppleDownload, automateDownloadAnalytics };

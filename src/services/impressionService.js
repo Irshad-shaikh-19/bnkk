@@ -97,6 +97,54 @@ async function downloadImpressionAnalytics() {
     await context.storageState({ path: SESSION_FILE });
   }
 
+
+
+  console.log("🔹 Opening account dropdown...");
+  try {
+    // Wait for user-profile button and click it
+    await page.waitForSelector('.user-profile', { timeout: 15000 });
+    await page.click('.user-profile');
+    console.log("✅ Account dropdown opened.");
+  } catch (err) {
+    console.error("❌ Failed to open account dropdown. Exiting...");
+    return;
+  }
+  
+  console.log("🔹 Waiting for provider list to appear...");
+  try {
+    await page.waitForSelector('#providers .provider-list li', { timeout: 20000 });
+  
+    const providerElements = await page.$$('#providers .provider-list li');
+    console.log(`🔍 Found ${providerElements.length} providers. Checking for 'SwapGroup LTD'...`);
+  
+    let swapGroupProvider = null;
+  
+    for (const provider of providerElements) {
+      const text = await provider.innerText();
+      console.log("➡️ Provider Option:", text.trim());
+      if (text.trim().includes("SwapGroup LTD")) {
+        swapGroupProvider = provider;
+        break;
+      }
+    }
+  
+    if (swapGroupProvider) {
+      await Promise.all([
+        page.waitForNavigation({ waitUntil: "domcontentloaded" }),
+        swapGroupProvider.click()
+      ]);
+      console.log("✅ 'SwapGroup LTD' selected.");
+      await page.waitForTimeout(5000); // Give time for app list to reload
+    } else {
+      console.error("❌ 'SwapGroup LTD' not found in provider list! Exiting...");
+      return;
+    }
+  
+  } catch (err) {
+    console.error("❌ Error during provider switch:", err.message);
+    return;
+  }
+
   console.log("🔹 Waiting for the analytics page to fully load...");
   await page.waitForTimeout(10000); 
 

@@ -10,7 +10,7 @@ if (!fs.existsSync(DOWNLOADS_DIR)) {
   fs.mkdirSync(DOWNLOADS_DIR);
 }
 
-async function downloadAppleAnalytics() {
+async function downloadAppleDownloadAnalytics() {
   console.log("🚀 Starting Apple Analytics Automation...");
 
   const browser = await chromium.launch({
@@ -97,7 +97,12 @@ async function downloadAppleAnalytics() {
     await context.storageState({ path: SESSION_FILE });
   }
 
- 
+
+
+
+
+
+
 
   console.log("🔹 Opening account dropdown...");
   try {
@@ -134,7 +139,7 @@ async function downloadAppleAnalytics() {
         swapGroupProvider.click()
       ]);
       console.log("✅ 'SwapGroup LTD' selected.");
-      await page.waitForTimeout(5000); // Give time for app list to reload
+      await page.waitForTimeout(5000); 
     } else {
       console.error("❌ 'SwapGroup LTD' not found in provider list! Exiting...");
       return;
@@ -155,6 +160,8 @@ async function downloadAppleAnalytics() {
   console.log("🔹 Waiting for the analytics page to fully load...");
   await page.waitForTimeout(10000); 
 
+ 
+
   console.log("🔹 Scrolling down to ensure 'Freeze Debt' is visible...");
   await page.evaluate(() => window.scrollBy(0, 500));
 
@@ -164,7 +171,7 @@ async function downloadAppleAnalytics() {
     freezeDebtApp = await page.$('text="Freeze Debt"');
     if (freezeDebtApp) break;
     console.log(`🔄 Attempt ${i + 1}: 'Freeze Debt' not found. Retrying in 3 seconds...`);
-    await page.waitForTimeout(3000);
+    await page.waitForTimeout(4000);
     await page.evaluate(() => window.scrollBy(0, 500)); 
   }
 
@@ -209,65 +216,75 @@ async function downloadAppleAnalytics() {
   
 
 
+    // 🔽 Select "Impressions" from the left-side metric dropdown
+    console.log("🔹 Opening metric type dropdown (e.g., 'Product Page Views')...");
+
+    // Find and click the metric dropdown (Product Page Views)
+    const metricDropdown = await page.locator('button:has-text("Product Page Views")');
+    await metricDropdown.waitFor({ state: "visible", timeout: 10000 });
+    await metricDropdown.click();
+    
+    console.log("🔁 Switching to 'Total Downloads'...");
 
 
+    // Select 'Downloads'
+    console.log("🔹 Selecting 'Downloads'...");
+    await page.waitForSelector('text=Downloads', { timeout: 10000 });
+    await page.click('text=Downloads');
 
+    // Then select 'Total Downloads'
+    console.log("🔹 Selecting 'Total Downloads'...");
+    await page.waitForSelector('text=Total Downloads', { timeout: 10000 });
+    await page.click('text=Total Downloads');
+
+    // Wait for chart/data to reload
+    console.log("⏳ Waiting for data to reload with Total Downloads...");
+    await page.waitForTimeout(3000);
+
+    // Open date range dropdown again
     console.log("🔹 Opening date range dropdown...");
+    const dateRangeButton2 = await page.locator('button:has-text("Lifetime"), button:has-text("-")').first();
+    await dateRangeButton2.waitFor({ state: 'visible', timeout: 10000 });
+    await dateRangeButton2.click();
 
-    
-    const dateRangeButton = await page.locator('button:has-text("-")').first();
-    await dateRangeButton.waitFor({ state: 'visible', timeout: 10000 });
-    await dateRangeButton.click();
-    
-  
-    console.log("🔹 Selecting 'Lifetime'...");
+    console.log("🔹 Selecting 'Lifetime' again...");
     await page.waitForSelector('text=Lifetime', { timeout: 10000 });
     await page.click('text=Lifetime');
-    
-   
+
     console.log("⏳ Waiting for data to reload after selecting Lifetime...");
-    await page.waitForTimeout(35000);
-    
-    
+    await page.waitForTimeout(45000);
+
     console.log("🔹 Opening Export menu...");
-    const exportMenuButton = await page.locator('button:has(svg path[d*="M8.99442777"])').first();
-await exportMenuButton.waitFor({ state: 'visible', timeout: 15000 });
-await exportMenuButton.click();
-    
-   
-    console.log("🔹 Clicking 'Export as CSV'...");
-    const [download] = await Promise.all([
+    const exportMenuButton2 = await page.locator('button:has(svg path[d*="M8.99442777"])').first();
+    await exportMenuButton2.waitFor({ state: 'visible', timeout: 35000 });
+    await exportMenuButton2.click();
+
+    console.log("🔹 Clicking 'Export as CSV' for Total Downloads...");
+    const [download2] = await Promise.all([
       page.waitForEvent("download"),
       page.click('text=Export as CSV'),
     ]);
-    
-    const filePath = await download.path();
-    if (!filePath) {
-      console.error("❌ Download path is undefined! Exiting...");
-      await browser.close();
+
+    const filePath2 = await download2.path();
+    if (!filePath2) {
+      console.error("❌ Download path is undefined for Total Downloads! Exiting...");
       return;
     }
-  
-    // ✅ Ensure download directory exists
-    if (!fs.existsSync(DOWNLOADS_DIR)) {
-      fs.mkdirSync(DOWNLOADS_DIR, { recursive: true });
+
+    const totalDownloadsPath = path.join(DOWNLOADS_DIR, "total_downloads.csv");
+
+    // Remove existing file before saving
+    if (fs.existsSync(totalDownloadsPath)) {
+      fs.unlinkSync(totalDownloadsPath);
+      console.log("🗑 Old total_downloads.csv removed.");
     }
-  
-    const finalPath = path.join(DOWNLOADS_DIR, "analytics.csv");
-  
-    // ✅ Remove existing file before saving
-    if (fs.existsSync(finalPath)) {
-      fs.unlinkSync(finalPath);
-      console.log("🗑 Old analytics.csv removed.");
-    }
-  
-    // ✅ Save new CSV
-    await download.saveAs(finalPath);
-    console.log(`✅ CSV Downloaded: ${finalPath}`);
-  
+
+    await download2.saveAs(totalDownloadsPath);
+    console.log(`✅ CSV Downloaded: ${totalDownloadsPath}`);
+
     await browser.close();
-    return finalPath;
+    return totalDownloadsPath;
   
 }
 
-module.exports = { downloadAppleAnalytics };
+module.exports = {  downloadAppleDownloadAnalytics };
