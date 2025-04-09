@@ -1,12 +1,16 @@
 const { downloadAppleAnalytics } = require("../services/scarpingService");
 const { downloadImpressionAnalytics } = require("../services/impressionService")
 const { downloadAppleDownloadAnalytics } = require("../services/downloadService")
+const { downloadAppleActiveUserAnalytics } = require("../services/activeUser.service")
+const { downloadAppleSessionAnalytics } = require("../services/session.service")
 
 
-const { getAppleAnalyticsData,getAppleImpressionData,getAppleDownloadData } = require("../services/analytic.service");
+const { getAppleAnalyticsData,getAppleImpressionData,getAppleDownloadData,getAppleActiveUserData,getAppleSessionData } = require("../services/analytic.service");
 const Analytic = require("../models/analytics.model");
 const Impression = require("../models/impression.model");
 const Download = require("../models/download.model");
+const ActiveUser = require("../models/activeUser.model");
+const Session = require("../models/session.model");
 
 
 // GET: Return parsed data from existing CSV
@@ -86,7 +90,7 @@ const automateImpressionAnalytics = async (req, res) => {
 
 
 
-// GET: Impressions Data
+// GET: Download Data
 const fetchAppleDownload = async (req, res) => {
   try {
     const data = await Download.find().sort({ date: 1 });
@@ -98,7 +102,7 @@ const fetchAppleDownload = async (req, res) => {
 };
 
 
-// POST: Automate downloading Impressions data
+// POST: Automate downloading Downloads data
 const automateDownloadAnalytics = async (req, res) => {
   try {
     console.log("🚀 Starting Analytics Automation (Downloads)...");
@@ -115,4 +119,72 @@ const automateDownloadAnalytics = async (req, res) => {
 };
 
 
-module.exports = { fetchAppleAnalytics, automateAnalytics, fetchAppleImpression,automateImpressionAnalytics, fetchAppleDownload, automateDownloadAnalytics };
+
+
+
+
+
+
+
+// GET: Active User Data
+const fetchAppleActiveUser = async (req, res) => {
+  try {
+    const data = await ActiveUser.find().sort({ date: 1 });
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("❌ Error fetching Active User Analytics:", error.message);
+    res.status(500).json({ message: "Failed to fetch active user data" });
+  }
+};
+
+
+// POST: Automate downloading Active User data
+const automateActiveUserAnalytics = async (req, res) => {
+  try {
+    console.log("🚀 Starting Analytics Automation (active users)...");
+    await downloadAppleActiveUserAnalytics();
+    const downloadData = await getAppleActiveUserData();
+    res.status(200).json({
+      message: "✅ Active Users data fetched!",
+      data: downloadData,
+    });
+  } catch (error) {
+    console.error("❌ Active Users Automation failed:", error.message);
+    res.status(500).json({ error: "Automation failed", detail: error.message });
+  }
+};
+
+
+
+
+
+// GET: Session Data
+const fetchAppleSession = async (req, res) => {
+  try {
+    const data = await Session.find().sort({ date: 1 });
+    res.status(200).json(data);
+  } catch (error) {
+    console.error("❌ Error fetching Session Analytics:", error.message);
+    res.status(500).json({ message: "Failed to fetch Session data" });
+  }
+};
+
+
+// POST: Automate downloading Session data
+const automateSessionAnalytics = async (req, res) => {
+  try {
+    console.log("🚀 Starting Analytics Automation (sessions)...");
+    await downloadAppleSessionAnalytics();
+    const sessionData = await getAppleSessionData();
+    res.status(200).json({
+      message: "✅ Session data fetched!",
+      data: sessionData,
+    });
+  } catch (error) {
+    console.error("❌ Session Automation failed:", error.message);
+    res.status(500).json({ error: "Automation failed", detail: error.message });
+  }
+};
+
+
+module.exports = { fetchAppleAnalytics, automateAnalytics, fetchAppleImpression,automateImpressionAnalytics, fetchAppleDownload, automateDownloadAnalytics, fetchAppleActiveUser,automateActiveUserAnalytics,fetchAppleSession, automateSessionAnalytics };

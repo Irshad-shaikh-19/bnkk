@@ -4,6 +4,9 @@ const csv = require("csv-parser");
 const Analytic = require("../models/analytics.model");
 const Impression = require("../models/impression.model")
 const Download = require("../models/download.model")
+const ActiveUser = require("../models/activeUser.model")
+const Session = require("../models/session.model")
+
 
 const getAppleAnalyticsData = () => {
   return new Promise((resolve, reject) => {
@@ -174,4 +177,119 @@ const getAppleDownloadData = () => {
   });
 };
 
-module.exports = { getAppleAnalyticsData,getAppleImpressionData,getAppleDownloadData };
+
+
+
+
+const getAppleActiveUserData = () => {
+  return new Promise((resolve, reject) => {
+    const filePath = path.join(__dirname, "../downloads/active_users.csv");
+
+    if (!fs.existsSync(filePath)) {
+      return reject(new Error("CSV file not found"));
+    }
+
+    const lines = fs.readFileSync(filePath, "utf-8").split("\n");
+    const headerIndex = lines.findIndex(line => line.startsWith("Date,"));
+    if (headerIndex === -1) {
+      return reject(new Error("Header row not found in CSV"));
+    }
+
+    const cleanedLines = lines.slice(headerIndex).join("\n");
+    const cleanedPath = path.join(__dirname, "../downloads/cleaned_active_users.csv");
+    fs.writeFileSync(cleanedPath, cleanedLines);
+
+    const results = [];
+
+    fs.createReadStream(cleanedPath)
+      .pipe(csv())
+      .on("data", (data) => {
+        const date = data["Date"];
+        const activeUsers = data["Active Devices"];
+
+        if (date && activeUsers) {
+          results.push({
+            date: new Date(date.trim()),
+            activeUsers: parseFloat(activeUsers),
+          });
+        }
+      })
+      .on("end", async () => {
+        try {
+          fs.unlinkSync(cleanedPath);
+
+          // Clear old records (optional)
+          await ActiveUser.deleteMany({});
+
+          // Insert new records
+          await ActiveUser.insertMany(results);
+
+          resolve(results);
+        } catch (err) {
+          reject(err);
+        }
+      })
+      .on("error", (err) => {
+        reject(err);
+      });
+  });
+};
+
+
+
+
+const getAppleSessionData = () => {
+  return new Promise((resolve, reject) => {
+    const filePath = path.join(__dirname, "../downloads/sessions.csv");
+
+    if (!fs.existsSync(filePath)) {
+      return reject(new Error("CSV file not found"));
+    }
+
+    const lines = fs.readFileSync(filePath, "utf-8").split("\n");
+    const headerIndex = lines.findIndex(line => line.startsWith("Date,"));
+    if (headerIndex === -1) {
+      return reject(new Error("Header row not found in CSV"));
+    }
+
+    const cleanedLines = lines.slice(headerIndex).join("\n");
+    const cleanedPath = path.join(__dirname, "../downloads/cleaned_sessions.csv");
+    fs.writeFileSync(cleanedPath, cleanedLines);
+
+    const results = [];
+
+    fs.createReadStream(cleanedPath)
+      .pipe(csv())
+      .on("data", (data) => {
+        const date = data["Date"];
+        const sessions = data["Sessions"];
+
+        if (date && sessions) {
+          results.push({
+            date: new Date(date.trim()),
+            sessions: parseFloat(sessions),
+          });
+        }
+      })
+      .on("end", async () => {
+        try {
+          fs.unlinkSync(cleanedPath);
+
+          // Clear old records (optional)
+          await Session.deleteMany({});
+
+          // Insert new records
+          await Session.insertMany(results);
+
+          resolve(results);
+        } catch (err) {
+          reject(err);
+        }
+      })
+      .on("error", (err) => {
+        reject(err);
+      });
+  });
+};
+
+module.exports = { getAppleAnalyticsData,getAppleImpressionData,getAppleDownloadData, getAppleActiveUserData,getAppleSessionData };
