@@ -10,7 +10,7 @@ if (!fs.existsSync(DOWNLOADS_DIR)) {
   fs.mkdirSync(DOWNLOADS_DIR);
 }
 
-async function downloadAppleDownloadAnalytics() {
+async function downloadAppleMonthlyActiveUserAnalytics() {
   console.log("🚀 Starting Apple Analytics Automation...");
 
   const browser = await chromium.launch({
@@ -93,7 +93,7 @@ async function downloadAppleDownloadAnalytics() {
     console.log("🚨 PLEASE ENTER OTP MANUALLY AND PRESS 'Trust' TO REMEMBER DEVICE 🚨");
     await page.waitForTimeout(60000); 
 
-    console.log("✅ Saving session to avoid OTP next time...");  
+    console.log("✅ Saving session to avoid OTP next time...");
     await context.storageState({ path: SESSION_FILE });
   }
 
@@ -224,22 +224,41 @@ async function downloadAppleDownloadAnalytics() {
     await metricDropdown.waitFor({ state: "visible", timeout: 10000 });
     await metricDropdown.click();
     
-    console.log("🔁 Switching to 'Total Downloads'...");
+    console.log("🔁 Switching to 'Active Users'...");
 
 
     // Select 'Downloads'
-    console.log("🔹 Selecting 'Downloads'...");
-    await page.waitForSelector('text=Downloads', { timeout: 10000 });
-    await page.click('text=Downloads');
+    console.log("🔹 Selecting 'Usage'...");
+    await page.waitForSelector('text=Usage', { timeout: 10000 });
+    await page.click('text=Usage');
 
     // Then select 'Total Downloads'
-    console.log("🔹 Selecting 'Total Downloads'...");
-    await page.waitForSelector('text=Total Downloads', { timeout: 10000 });
-    await page.click('text=Total Downloads');
+    console.log("🔹 Selecting 'Active Devices'...");
+    await page.waitForSelector('text=Active Devices', { timeout: 10000 });
+    await page.click('text=Active Devices');
 
     // Wait for chart/data to reload
-    console.log("⏳ Waiting for data to reload with Total Downloads...");
+    console.log("⏳ Waiting for data to reload with Active Devices...");
     await page.waitForTimeout(3000);
+
+
+    // Click the dropdown that shows the selected period (e.g., 'Months', 'Weeks', etc.)
+console.log("🔹 Opening time range dropdown (e.g., Months)...");
+
+await page.waitForSelector('button[class*="jijsjF"]', { timeout: 10000 });
+await page.click('button[class*="jijsjF"]');
+
+// Wait for the dropdown options to appear and click 'Months'
+console.log("🔹 Selecting 'Months'...");
+await page.waitForSelector('text=Months', { timeout: 5000 });
+await page.click('text=Months');
+
+// Wait for the data to reload
+console.log("⏳ Waiting for daily data to load...");
+await page.waitForTimeout(3000);
+
+
+
 
     // Open date range dropdown again
     console.log("🔹 Opening date range dropdown...");
@@ -271,20 +290,20 @@ async function downloadAppleDownloadAnalytics() {
       return;
     }
 
-    const totalDownloadsPath = path.join(DOWNLOADS_DIR, "total_downloads.csv");
+    const monthlyActiveUsersPath = path.join(DOWNLOADS_DIR, "monthly_active_users.csv");
 
     // Remove existing file before saving
-    if (fs.existsSync(totalDownloadsPath)) {
-      fs.unlinkSync(totalDownloadsPath);
-      console.log("🗑 Old total_downloads.csv removed.");
+    if (fs.existsSync(monthlyActiveUsersPath)) {
+      fs.unlinkSync(monthlyActiveUsersPath);
+      console.log("🗑 Old monthly_active_users.csv removed.");
     }
 
-    await download2.saveAs(totalDownloadsPath);
-    console.log(`✅ CSV Downloaded: ${totalDownloadsPath}`);
+    await download2.saveAs(monthlyActiveUsersPath);
+    console.log(`✅ CSV Downloaded: ${monthlyActiveUsersPath}`);
 
     await browser.close();
-    return totalDownloadsPath;
+    return monthlyActiveUsersPath;
   
 }
 
-module.exports = {  downloadAppleDownloadAnalytics };
+module.exports = {  downloadAppleMonthlyActiveUserAnalytics };
