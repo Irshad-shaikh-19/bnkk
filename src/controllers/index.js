@@ -19,3 +19,6 @@ module.exports.notificationTableController = require('./notification_table.contr
 module.exports.fcmtokenController = require('./fcmtoken.controller')
 module.exports.subscriptionController = require('./subscription.controller')
 module.exports.analyticController = require('./analytics.controller')
+module.exports.discountCodeController = require('./discountCode.controller')
+module.exports.palnController = require('./plan.controller')
+module.exports.subscriptionsController = require('./subscriptions.controller')

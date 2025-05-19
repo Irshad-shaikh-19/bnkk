@@ -20,6 +20,11 @@ const notificationTableRoute = require('./notification_table.route')
 const fcmtokenRoute = require('./fcmtoken.route')
 const subscriptionRoute = require('./subscription.route')
 const analyticRoute = require('./analytic.route')
+const discountCodeRoute = require('./discountCode.route')
+const planRoute = require('./plan.route')
+const subscriptionsRoute = require('./subscriptions.route')
+
+
 
 const router = express.Router();
 
@@ -107,6 +112,18 @@ const defaultRoutes = [
   {
     path: '/analytics',
     route: analyticRoute,
+  },
+   {
+    path: '/discount',
+    route: discountCodeRoute,
+  },
+   {
+    path: '/plan',
+    route: planRoute,
+  },
+    {
+    path: '/subscriptions',
+    route: subscriptionsRoute,
   },
 
 ];
