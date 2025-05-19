@@ -11,8 +11,20 @@ mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
   server = app.listen(port, () => {
     logger.info(`Listening to port ${port}`);
   });
-  const io = require('socket.io')(server, { cors: { origin: '*' } });
+  
+  // Socket.io configuration with CORS
+  const io = require('socket.io')(server, {
+    cors: {
+      origin: '*',
+      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'usertimezone'],
+      credentials: true
+    }
+  });
+  
   socketEvents(io);
+}).catch((error) => {
+  logger.error('MongoDB connection error:', error);
 });
 
 const exitHandler = () => {
