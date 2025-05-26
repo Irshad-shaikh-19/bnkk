@@ -5,9 +5,37 @@ const pick = require('../utils/pick');
 const getAllContactSupport = catchAsync(async (req, res) => {
   const filter = pick(req.query, ['search', 'status', 'startDate', 'endDate']);
   const options = pick(req.query, ['sortBy', 'limit', 'page']);
-  const { status, message, data, pagination } =
-    await contactSupportService.getAllContactSupport(filter, options);
-  res.send({ status, message, data, pagination });
+  const result = await contactSupportService.getAllContactSupport(filter, options);
+  res.send(result);
 });
 
-module.exports = { getAllContactSupport };
+const createContactSupport = catchAsync(async (req, res) => {
+  const result = await contactSupportService.createContactSupport(req.body);
+  res.status(result.status).send(result);
+});
+
+const getContactSupport = catchAsync(async (req, res) => {
+  const result = await contactSupportService.getContactSupportById(req.params.id);
+  res.status(result.status).send(result);
+});
+
+const updateContactSupport = catchAsync(async (req, res) => {
+  const result = await contactSupportService.updateContactSupport(
+    req.params.id,
+    req.body
+  );
+  res.status(result.status).send(result);
+});
+
+const deleteContactSupport = catchAsync(async (req, res) => {
+  const result = await contactSupportService.deleteContactSupport(req.params.id);
+  res.status(result.status).send(result);
+});
+
+module.exports = {
+  getAllContactSupport,
+  createContactSupport,
+  getContactSupport,
+  updateContactSupport,
+  deleteContactSupport,
+};

@@ -7,24 +7,12 @@ const socketEvents = require('./utils/socket');
 let server;
 mongoose.connect(config.mongoose.url, config.mongoose.options).then(() => {
   logger.info('Connected to MongoDB');
-  const port = process.env.PORT || 8000;
+  const port = process.env.PORT || config.port || 8000;
   server = app.listen(port, () => {
-    logger.info(`Listening to port ${port}`);
+    logger.info(`Listening to port ${config.port}`);
   });
-  
-  // Socket.io configuration with CORS
-  const io = require('socket.io')(server, {
-    cors: {
-      origin: '*',
-      methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'usertimezone'],
-      credentials: true
-    }
-  });
-  
+  const io = require('socket.io')(server, { cors: { origin: '*' } });
   socketEvents(io);
-}).catch((error) => {
-  logger.error('MongoDB connection error:', error);
 });
 
 const exitHandler = () => {

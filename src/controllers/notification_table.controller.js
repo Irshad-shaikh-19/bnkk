@@ -14,44 +14,108 @@ const createNotification = catchAsync(async (req, res) => {
   });
 });
 
-
+/**
+ * Send notification to all users
+ */
 const sendNotification = catchAsync(async (req, res) => {
-  const { title, description, data, notificationId } = req.body;
+  const { notificationId } = req.body;
 
-  // Validate required fields
-  if (!title || !description) {
-    return res.status(httpStatus.BAD_REQUEST).json({
-      status: httpStatus.BAD_REQUEST,
-      message: 'Title and description are required.',
+  if (!notificationId) {
+    return res.status(400).json({
+      success: false,
+      message: 'Notification ID is required'
     });
   }
 
-  try {
-    console.log('Initiating notification send:', { title, description, data, notificationId });
+  const result = await notificationService.sendNotification({ notificationId });
 
-    // Delegate to service layer
-    const response = await notificationService.sendNotification({
-      title,
-      description,
-      data,
-      notificationId,
+  return res.status(result.status).json({
+    success: result.success,
+    message: result.message,
+    data: result.data || null,
+  });
+});
+
+/**
+ * Send notification to specific user group/category
+ */
+const sendNotificationToGroup = catchAsync(async (req, res) => {
+  const { notificationId, category } = req.body;
+
+  if (!notificationId || !category) {
+    return res.status(400).json({
+      success: false,
+      message: 'Notification ID and category are required'
     });
+  }
 
-    return res.status(httpStatus.OK).json({
+  const result = await notificationService.sendNotificationToGroup({ 
+    notificationId, 
+    category 
+  });
+
+  // Always return the status from the service
+  return res.status(result.status).json({
+    success: result.success,
+    message: result.message,
+    data: result.data || null,
+    ...(result.error && { error: result.error })
+  });
+});
+
+
+/**
+ * Send notification to specific users
+ */
+const sendNotificationToUsers = catchAsync(async (req, res) => {
+  const { notificationId, userIds } = req.body;
+
+  if (!notificationId || !userIds || !userIds.length) {
+    return res.status(400).json({
+      success: false,
+      message: 'Notification ID and user IDs are required'
+    });
+  }
+
+  const result = await notificationService.sendNotificationToUsers({ 
+    notificationId, 
+    userIds 
+  });
+
+  return res.status(result.status).json({
+    success: result.success,
+    message: result.message,
+    data: result.data || null,
+  });
+});
+
+/**
+ * Get user categories with their financial data
+ */
+// In notification.controller.js
+const getUserCategories = catchAsync(async (req, res) => {
+  try {
+    const results = await notificationService.getUserCategories();
+    
+    // Ensure we're always returning an array
+    const data = Array.isArray(results) ? results : [];
+    
+    res.status(httpStatus.OK).json({
       status: httpStatus.OK,
-      message: 'Notification sent successfully',
-      data: response,
+      message: 'User categories retrieved successfully',
+      data: data, // Always return an array
+      count: data.length
     });
   } catch (error) {
-    console.error('Error in sendNotification controller:', error);
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+    console.error('Controller error:', error);
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
       status: httpStatus.INTERNAL_SERVER_ERROR,
-      message: 'Failed to send notification',
-      error: error.message || 'Unknown error',
+      message: error.message || 'Error retrieving user categories',
+      data: [], // Return empty array on error
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
-
 
 
 
@@ -134,13 +198,42 @@ const deleteNotification = catchAsync(async (req, res) => {
     status: httpStatus.OK,
     message: 'Notification deleted successfully',
   });
+
+});
+
+
+
+
+const getUsersWithFcmTokens = catchAsync(async (req, res) => {
+  try {
+    const results = await notificationService.getUsersWithFcmTokens();
+    
+    res.status(httpStatus.OK).json({
+      status: httpStatus.OK,
+      message: 'Users with FCM tokens retrieved successfully',
+      data: results,
+      count: results.length
+    });
+  } catch (error) {
+    console.error('Controller error:', error);
+    res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
+      status: httpStatus.INTERNAL_SERVER_ERROR,
+      message: error.message || 'Error retrieving users with FCM tokens',
+      data: [],
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
 });
 
 module.exports = {
   createNotification,
   sendNotification,
+  sendNotificationToGroup,
+  sendNotificationToUsers,
+  getUserCategories,
   getNotifications,
   getNotificationById,
   updateNotification,
   deleteNotification,
+  getUsersWithFcmTokens
 };

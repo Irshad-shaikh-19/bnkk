@@ -7,6 +7,12 @@ router.post('/create', auth(), notificationController.createNotification);
 router.post('/send', auth(), notificationController.sendNotification);
 router.get('/list', auth(), notificationController.getNotifications);
 
+router.post('/send-group', auth(), notificationController.sendNotificationToGroup);
+router.post('/send-users', auth(), notificationController.sendNotificationToUsers);
+router.get('/user-categories', auth(), notificationController.getUserCategories);
+
+router.get('/users-with-tokens', auth(), notificationController.getUsersWithFcmTokens);
+
 // Dynamic routes last
 router.get('/:id', auth(), notificationController.getNotificationById);
 router.put('/:id', auth(), notificationController.updateNotification);
